@@ -1,0 +1,50 @@
+import { loginAndCollectCookies } from "@/lib/b25-cookie";
+import { sendEmote } from "@/lib/emote";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function POST(request: NextRequest) {
+  let body;
+
+  try {
+    body = await request.json();
+  } catch (err) {
+    console.log(err)
+    return NextResponse.json(
+      { error: "Invalid or empty JSON body" },
+      { status: 400 },
+    );
+  }
+
+  const { server, team_code, emote_id, uids, auto_leave } = body;
+
+  if (!server || !team_code || !emote_id || !uids) {
+    return NextResponse.json(
+      { error: "Missing required parameters" },
+      { status: 400 },
+    );
+  }
+  try {
+    const cookies = await loginAndCollectCookies();
+    if (cookies.length === 0) {
+      return NextResponse.json(
+        { error: "No cookies collected from the login process" },
+        { status: 401 },
+      );
+    }
+    const data = await sendEmote({
+      server,
+      team_code,
+      emote_id,
+      uids,
+      auto_leave: !!auto_leave,
+      cookies,
+    });
+    return NextResponse.json({ data });
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json(
+      { error: "Failed to login and collect cookies" },
+      { status: 500 },
+    );
+  }
+}
