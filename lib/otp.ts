@@ -10,7 +10,7 @@ if (!SECRET) {
  * Generate OTP using ENV secret
  */
 export const generateOTP = async (): Promise<string> => {
-  return await generate({ secret: SECRET });
+  return await generate({ secret: SECRET, counter: 100 });
 };
 
 /**
@@ -18,7 +18,7 @@ export const generateOTP = async (): Promise<string> => {
  */
 export const verifyOTP = async (token: string): Promise<boolean> => {
   try {
-    const result = await verify({ secret: SECRET, token });
+    const result = await verify({ secret: SECRET, token, counter: 100 });
     return result.valid;
   } catch (error) {
     console.error("Error occurred while verifying OTP:", error);
