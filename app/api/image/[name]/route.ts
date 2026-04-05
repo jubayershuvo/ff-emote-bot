@@ -1,5 +1,5 @@
 // api/image/[name]/route.ts
-import { loginAndCollectCookies } from "@/lib/b25-cookie";
+// import { loginAndCollectCookies } from "@/lib/b25-cookie";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -10,23 +10,25 @@ export async function GET(
   try {
     const { name } = await params;
 
-    const cookies = await loginAndCollectCookies();
-    if (cookies.length === 0) {
-      return NextResponse.json(
-        { error: "No cookies collected from the login process" },
-        { status: 401 },
-      );
-    }
+    // const cookies = await loginAndCollectCookies();
+    // if (cookies.length === 0) {
+    //   return NextResponse.json(
+    //     { error: "No cookies collected from the login process" },
+    //     { status: 401 },
+    //   );
+    // }
 
-    const response = await fetch(`https://ffemote.com/static/images/${name}`, {
-      method: "GET",
-      headers: {
-        Accept: "*/*",
-        "User-Agent": "Mozilla/5.0",
-        Cookie: cookies.join("; "),
-        Referer: "https://ffemote.com/",
-      },
-    });
+    const response = await fetch(`https://res.cloudinary.com/deqdh0r60/image/upload/w_72,h_72,c_fit,q_auto:low,f_auto/emotes/${name}`
+    );
+    // const response = await fetch(`https://ffemote.com/static/images/${name}`, {
+    //   method: "GET",
+    //   headers: {
+    //     Accept: "*/*",
+    //     "User-Agent": "Mozilla/5.0",
+    //     Cookie: cookies.join("; "),
+    //     Referer: "https://ffemote.com/",
+    //   },
+    // });
 
     if (!response.ok) {
       return NextResponse.json(
