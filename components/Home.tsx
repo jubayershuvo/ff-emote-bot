@@ -337,11 +337,11 @@ export default function HomePage() {
 
   //ads loader
   useEffect(() => {
-    initPopunder();
+    // initPopunder();
     initSocialBar();
     const ad = () => showNativeAd(() => console.log("native reward"), 5)
     //run after 2sec
-    const timer = setTimeout(ad, 2000);
+    const timer = setTimeout(ad, 1000);
     return () => clearTimeout(timer);
   }, []);
   return (
