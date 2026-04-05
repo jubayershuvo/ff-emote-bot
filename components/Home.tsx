@@ -2,6 +2,9 @@
 
 import { useEffect, useState, useRef } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import { initPopunder, initSocialBar } from "./adsterra/adsterra";
+import AdBanner from "./adsterra/Adbanner";
+import { showNativeAd } from "./adsterra/AdPopupProvider";
 
 /* ------------------- JSON DATA ------------------- */
 const servers = [
@@ -222,7 +225,7 @@ export default function HomePage() {
         body: JSON.stringify(payload),
       });
 
-      const {data} = await res.json();
+      const { data } = await res.json();
       toast.success(data.message, {
         id: "send",
         icon: "🎉",
@@ -300,8 +303,8 @@ export default function HomePage() {
   };
 
   const startLagging = async () => {
-    if(!teamCode) return toast.error("Please enter team code");
-    if(!server) return toast.error("Please select a server");
+    if (!teamCode) return toast.error("Please enter team code");
+    if (!server) return toast.error("Please select a server");
     setIsLagging(true);
     try {
       const res = await fetch("/api/send-lag", {
@@ -309,7 +312,7 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ team_code: teamCode, server }),
       });
-      const {data} = await res.json();
+      const { data } = await res.json();
       toast.success(data.message, {
         icon: "🎉",
         style: {
@@ -332,6 +335,15 @@ export default function HomePage() {
     loadEmotes();
   }, []);
 
+  //ads loader
+  useEffect(() => {
+    initPopunder();
+    initSocialBar();
+    const ad = () => showNativeAd(() => console.log("native reward"), 5)
+    //run after 2sec
+    const timer = setTimeout(ad, 2000);
+    return () => clearTimeout(timer);
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-6">
       <Toaster position="top-right" reverseOrder={false} />
@@ -611,7 +623,7 @@ export default function HomePage() {
         </div>
 
         {/* INPUT SECTION (Original with UIDs) */}
-        <div className="bg-zinc-900/80 backdrop-blur-sm p-6 rounded-2xl border border-zinc-700 mb-8 hover:border-purple-500 transition-all duration-300 slide-in">
+        <div className="bg-zinc-900/80 backdrop-blur-sm p-6 rounded-2xl border border-zinc-700 mb-4 hover:border-purple-500 transition-all duration-300 slide-in">
           <div className="grid md:grid-cols-2 gap-6">
             {/* Server Select */}
             <div className="hover-lift">
@@ -696,8 +708,12 @@ export default function HomePage() {
           </button>
         </div>
 
+
+
+        <div className="m-auto flex justify-center items-center"> <AdBanner type="banner728x90" /></div>
+
         {/* SEARCH SECTION */}
-        <div className="bg-zinc-900/80 backdrop-blur-sm p-6 rounded-2xl border border-zinc-700 mb-8 slide-in">
+        <div className="bg-zinc-900/80 mt-8 backdrop-blur-sm p-6 rounded-2xl border border-zinc-700 mb-8 slide-in">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
             <div className="flex-1 relative">
               <label className="block mb-2 text-zinc-400 text-sm">
@@ -729,31 +745,28 @@ export default function HomePage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setSearchFilter("both")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  searchFilter === "both"
-                    ? "filter-chip-active"
-                    : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${searchFilter === "both"
+                  ? "filter-chip-active"
+                  : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
+                  }`}
               >
                 Both
               </button>
               <button
                 onClick={() => setSearchFilter("name")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  searchFilter === "name"
-                    ? "filter-chip-active"
-                    : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${searchFilter === "name"
+                  ? "filter-chip-active"
+                  : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
+                  }`}
               >
                 Name
               </button>
               <button
                 onClick={() => setSearchFilter("id")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  searchFilter === "id"
-                    ? "filter-chip-active"
-                    : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${searchFilter === "id"
+                  ? "filter-chip-active"
+                  : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
+                  }`}
               >
                 ID
               </button>
@@ -868,7 +881,7 @@ export default function HomePage() {
       </div>
 
       {/* Floating UID Button (appears on mobile/tablet) */}
-      <button onClick={openUidPopup} className="floating-button lg:hidden">
+      <button onClick={openUidPopup} className="floating-button">
         <span className="text-2xl">👥</span>
         <span className="floating-button-badge">
           {uids.filter((uid) => uid.trim() !== "").length}
