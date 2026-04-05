@@ -1,5 +1,6 @@
 import { loginAndCollectCookies } from "@/lib/b25-cookie";
 import { sendEmote } from "@/lib/emote";
+import { verifyOTP } from "@/lib/otp";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -16,10 +17,17 @@ export async function POST(request: NextRequest) {
   }
 
   const otp = request.headers.get("x-otp");
-
   if (!otp) {
     return NextResponse.json(
       { error: "Missing OTP header" },
+      { status: 401 },
+    );
+  }
+
+  const isOtpValid = await verifyOTP(otp)
+  if (!isOtpValid) {
+    return NextResponse.json(
+      { error: "Invalid OTP" },
       { status: 401 },
     );
   }
