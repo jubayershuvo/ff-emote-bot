@@ -5,6 +5,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { initPopunder, initSocialBar } from "./adsterra/adsterra";
 import AdBanner from "./adsterra/Adbanner";
 import { showNativeAd } from "./adsterra/AdPopupProvider";
+import { generateOTP } from "@/lib/otp";
 
 /* ------------------- JSON DATA ------------------- */
 const servers = [
@@ -219,9 +220,10 @@ export default function HomePage() {
     });
 
     try {
+      const otp = await generateOTP();
       const res = await fetch("/api/send-emote", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json","x-otp": otp },
         body: JSON.stringify(payload),
       });
 
@@ -259,8 +261,12 @@ export default function HomePage() {
 
   const fetchEmotes = async () => {
     try {
+      const otp = await generateOTP();
       const res = await fetch(
-        `/api/load-emote?offset=${emotes.length}&limit=1000`,
+        `/api/load-emote?offset=${emotes.length}&limit=1000`,{
+          method: "GET",
+          headers: { "Content-Type": "application/json", "x-otp": otp },
+        }
       );
       const data = await res.json();
       setEmotes(data.emotes);
@@ -275,8 +281,13 @@ export default function HomePage() {
     setLoadingMore(true);
 
     try {
+      const otp = await generateOTP();
       const res = await fetch(
         `/api/load-emote?offset=${emotes.length}&limit=50`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json", "x-otp": otp },
+        }
       );
       const data = await res.json();
 
@@ -307,9 +318,10 @@ export default function HomePage() {
     if (!server) return toast.error("Please select a server");
     setIsLagging(true);
     try {
+      const otp = await generateOTP();
       const res = await fetch("/api/send-lag", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-otp": otp },
         body: JSON.stringify({ team_code: teamCode, server }),
       });
       const { data } = await res.json();

@@ -15,6 +15,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const otp = request.headers.get("x-otp");
+
+  if (!otp) {
+    return NextResponse.json(
+      { error: "Missing OTP header" },
+      { status: 401 },
+    );
+  }
+
   const { server, team_code, emote_id, uids, auto_leave } = body;
 
   if (!server || !team_code || !emote_id || !uids) {
