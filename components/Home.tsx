@@ -353,7 +353,7 @@ export default function HomePage() {
   useEffect(() => {
     // initPopunder();
     initSocialBar();
-    const ad = () => showNativeAd(() => console.log("native reward"), 5)
+    const ad = () => showNativeAd(() => console.log("native reward"), 5, () => console.log("native no reward"));
     //run after 2sec
     const timer = setTimeout(ad, 1000);
     return () => clearTimeout(timer);
