@@ -72,11 +72,20 @@ export const initNativeBanner = (containerId: string) => {
 // 🔥 SMARTLINK (Reward)
 // ==========================
 export const openSmartlink = () => {
-    window.open(
-        data.smartLink.url,
-        "_blank"
-    );
+  const url = data.smartLink.url;
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+
+  // required for some browsers
+  a.style.display = "none";
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 };
+
 
 // ==========================
 // 🔥 GENERIC BANNER LOADER

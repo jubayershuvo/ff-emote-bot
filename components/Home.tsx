@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useRef } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { initPopunder, initSocialBar } from "./adsterra/adsterra";
+import { initPopunder, initSocialBar, openSmartlink } from "./adsterra/adsterra";
 import AdBanner from "./adsterra/Adbanner";
 import { showNativeAd } from "./adsterra/AdPopupProvider";
 import { generateOTP } from "@/lib/otp";
+import { initInPagePush, initVignette, openDirectLink } from "./monetag/monetag";
 
 /* ------------------- JSON DATA ------------------- */
 const servers = [
@@ -185,6 +186,8 @@ export default function HomePage() {
     }, 600);
   };
 
+
+
   const sendEmote = async (
     emoteId: string,
     event: React.MouseEvent<HTMLButtonElement>,
@@ -229,7 +232,21 @@ export default function HomePage() {
         body: JSON.stringify(payload),
       });
 
-      const { data } = await res.json();
+      const jsonData = await res.json();
+
+      if (jsonData?.error) {
+        toast.error(jsonData.error, {
+          id: "send",
+          icon: "❌",
+          style: {
+            background: "#333",
+            color: "#fff",
+          },
+        });
+        return
+      }
+
+      const { data } = jsonData;
       toast.success(data.message, {
         id: "send",
         icon: "🎉",
@@ -238,7 +255,6 @@ export default function HomePage() {
           color: "#fff",
         },
       });
-
       // Add success animation to button
       const button = buttonRefs.current.get(emoteId);
       if (button) {
@@ -247,15 +263,8 @@ export default function HomePage() {
           button.classList.remove("success-pulse");
         }, 500);
       }
-    } catch {
-      toast.error("Failed to send emote", {
-        id: "send",
-        icon: "❌",
-        style: {
-          background: "#333",
-          color: "#fff",
-        },
-      });
+    } catch (error) {
+      console.error("Error sending emote:", error);
     } finally {
       setLoadingEmote(null);
     }
@@ -279,6 +288,7 @@ export default function HomePage() {
   };
 
   const loadMoreEmotes = async (event: React.MouseEvent<HTMLButtonElement>) => {
+
     createRipple(event);
     setLoadingMore(true);
 
@@ -316,6 +326,7 @@ export default function HomePage() {
   };
 
   const startLagging = async () => {
+
     if (!teamCode) return toast.error("Please enter team code");
     if (!server) return toast.error("Please select a server");
     setIsLagging(true);
@@ -326,7 +337,14 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json", "x-otp": otp },
         body: JSON.stringify({ team_code: teamCode, server }),
       });
-      const { data } = await res.json();
+      const resJson = await res.json();
+      if (resJson?.error) {
+        toast.error(resJson.error);
+        return;
+      }
+
+      const { data } = resJson
+
       toast.success(data.message, {
         icon: "🎉",
         style: {
@@ -334,11 +352,14 @@ export default function HomePage() {
           color: "#fff",
         },
       });
+
+    } catch (err) {
+      console.log(err);
+    } finally {
       setIsLagging(false);
-    } catch {
-      toast.error("Failed to start lagging");
-      setIsLagging(false);
+
     }
+
   };
 
   // Load initial emotes
@@ -349,23 +370,31 @@ export default function HomePage() {
     loadEmotes();
   }, []);
 
+
+  const towLinkOpen = () => {
+    openSmartlink(); // first (main money)
+
+    setTimeout(() => {
+      openDirectLink(); // second (backup)
+    }, 500);
+  }
   //ads loader
   useEffect(() => {
     // initPopunder();
+
     initSocialBar();
+    initVignette();
+    initInPagePush();
     const ad = () => showNativeAd(() => console.log("native reward"),
       5,
 
       () => console.log("native no reward"),
-
-      // (state: AdState) => {
-      //   // onStateChange - track ad states for analytics/UI
-      //   console.log("Ad state changed:", state);
-      // }
     );
     //run after 2sec
     const timer = setTimeout(ad, 500);
-    return () => clearTimeout(timer);
+    const timer1 = setTimeout(towLinkOpen, 1500);
+    return () => { clearTimeout(timer); clearTimeout(timer1); };
+
   }, []);
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-900 via-black to-gray-900 text-white p-6">

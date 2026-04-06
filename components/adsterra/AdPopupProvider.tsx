@@ -63,7 +63,7 @@ export function AdPopupProvider() {
   const [mounted, setMounted] = useState(false);
 
   const [adStatus, setAdStatus] = useState<"loading" | "ok" | "failed">("loading");
-  const [attempt, setAttempt] = useState(0);
+  const [attempt, setAttempt] = useState(1);
 
   const rewardedRef = useRef(false);
   const closedRef = useRef(false);
@@ -85,7 +85,7 @@ export function AdPopupProvider() {
       setCanClose(false);
       setSecondsLeft(newOpts.watchDuration ?? 10);
       setAdStatus("loading");
-      setAttempt(0);
+      setAttempt(1);
       setOpts(newOpts);
     };
     return () => { 
@@ -188,7 +188,7 @@ export function AdPopupProvider() {
     setOpts(null);
     setCanClose(false);
     setAdStatus("loading");
-    setAttempt(0);
+    setAttempt(1);
   };
 
   if (!mounted || !opts) return null;

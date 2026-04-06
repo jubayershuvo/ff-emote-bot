@@ -1,5 +1,6 @@
 "use client";
 import { showBannerAd, showNativeAd } from "@/components/adsterra/AdPopupProvider";
+import { initPopunder, initVignette, openDirectLink } from "@/components/monetag/monetag";
 import { useEffect } from "react";
 
 export default function Test() {
@@ -18,12 +19,15 @@ export default function Test() {
 
         // );
         //run after 2sec
-        const timer = setTimeout(ad, 500);
-        return () => clearTimeout(timer);
+        // const timer = setTimeout(ad, 500);
+        // return () => clearTimeout(timer);
+
+
+        // initPopunder();
     }, []);
     return (
         <div>
-            <h1>Test Page</h1>
+  
             <p>This is a test page for the application.</p>
         </div>
     );
