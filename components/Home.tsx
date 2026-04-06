@@ -353,7 +353,16 @@ export default function HomePage() {
   useEffect(() => {
     // initPopunder();
     initSocialBar();
-    const ad = () => showNativeAd(() => console.log("native reward"), 5, () => console.log("native no reward"));
+    const ad = () => showNativeAd(() => console.log("native reward"),
+      5,
+
+      () => console.log("native no reward"),
+
+      // (state: AdState) => {
+      //   // onStateChange - track ad states for analytics/UI
+      //   console.log("Ad state changed:", state);
+      // }
+    );
     //run after 2sec
     const timer = setTimeout(ad, 1000);
     return () => clearTimeout(timer);
