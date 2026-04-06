@@ -42,34 +42,25 @@ export const showNativeAd = (onReward?: () => void, watchDuration = 10, onNoRewa
   openAdPopup({ mode: "nativebanner", watchDuration, onReward, onNoReward });
 
 /* ═══════════════════════════════════════════════════════════
-   HELPERS
+   AD BLOCKER DETECTION - IMMEDIATE CHECK
 ═══════════════════════════════════════════════════════════ */
-function isSlotEmpty(id: string): boolean {
-  const el = document.getElementById(id);
-  if (!el) return true;
-  // Check if ad actually loaded visible content
-  const hasIframe = el.querySelector("iframe");
-  const hasImg = el.querySelector("img");
-  // Check if iframe has meaningful content (not blocked)
-  if (hasIframe) {
-    const iframe = hasIframe as HTMLIFrameElement;
-    // Check if iframe is blocked (often has no content or is about:blank)
-    try {
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (iframeDoc && iframeDoc.body) {
-        const bodyText = iframeDoc.body.innerText || "";
-        // Adblockers often leave iframes with no content or error messages
-        if (bodyText.includes("block") || bodyText.includes("adblock") || bodyText.trim().length === 0) {
-          return true;
-        }
-      }
-    } catch (e) {
-      // Cross-origin iframe - probably legitimate ad
-      return false;
-    }
+function isAdBlocked(): boolean {
+  // Method 1: Check for blocked ad script (most reliable)
+  const adScript = document.querySelector('script[src*="googlesyndication"]');
+  if (adScript && !adScript.clientHeight) {
+    return true;
   }
-  const hasText = (el.innerText || "").trim().length > 10;
-  return !hasIframe && !hasImg && !hasText;
+  
+  // Method 2: Create test ad element
+  const testAd = document.createElement('div');
+  testAd.className = 'adsbox';
+  testAd.style.cssText = 'position:absolute;top:-1000px;left:-1000px;width:1px;height:1px;';
+  document.body.appendChild(testAd);
+  
+  const isBlocked = testAd.offsetHeight === 0 && testAd.offsetWidth === 0;
+  document.body.removeChild(testAd);
+  
+  return isBlocked;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -89,7 +80,7 @@ export function AdPopupProvider() {
   const closedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const checkRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const adContainerRef = useRef<HTMLDivElement | null>(null);
+  const noRewardCalledRef = useRef(false);
 
   /* client-only guard */
   useEffect(() => {
@@ -97,26 +88,31 @@ export function AdPopupProvider() {
     return () => window.cancelAnimationFrame(id);
   }, []);
 
-  /* register global trigger */
+  /* register global trigger - IMMEDIATE ADBLOCKER CHECK */
   useEffect(() => {
     _open = (newOpts) => {
-      // Force cleanup of any existing popup first
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      if (checkRef.current) {
-        clearTimeout(checkRef.current);
-        checkRef.current = null;
-      }
-      
       // Reset all states
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (checkRef.current) clearTimeout(checkRef.current);
+      
       rewardedRef.current = false;
       closedRef.current = false;
+      noRewardCalledRef.current = false;
       setCanClose(false);
       setSecondsLeft(newOpts.watchDuration ?? 10);
       setAdStatus("loading");
       setAttempt(0);
+      
+      // IMMEDIATE AD BLOCKER CHECK - call onNoReward right away without showing popup
+      if (isAdBlocked()) {
+        console.log("Ad blocker detected - calling onNoReward immediately");
+        if (newOpts.onNoReward && !noRewardCalledRef.current) {
+          noRewardCalledRef.current = true;
+          newOpts.onNoReward();
+        }
+        return; // Don't show popup at all
+      }
+      
       setOpts(newOpts);
     };
     return () => { 
@@ -135,56 +131,42 @@ export function AdPopupProvider() {
     // Clear any pending check
     if (checkRef.current) clearTimeout(checkRef.current);
 
-    // Clean previous slot content
-    const slot = document.getElementById(slotId);
-    if (slot) slot.innerHTML = "";
-
-    // Inject ad
-    if (opts.mode === "nativebanner") {
-      initNativeBanner(slotId);
-    } else {
-      const ad = AdsData[opts.bannerKey ?? "banner300x250"];
-      loadBanner(ad.key, ad.width, ad.height, slotId);
-    }
-
-    // Check after delays to detect adblocker
-    const checkAdLoaded = () => {
-      if (isSlotEmpty(slotId)) {
-        if (attempt < 1) {
-          // Retry once
-          const el = document.getElementById(slotId);
-          if (el) el.innerHTML = "";
-          setAttempt((a) => a + 1);
-        } else {
-          // Both attempts failed - show adblocker message
-          setAdStatus("failed");
-          // Auto-close after showing message (optional)
-          setTimeout(() => {
-            if (closedRef.current) return;
-            closedRef.current = true;
-            if (opts?.onNoReward) opts.onNoReward();
-            resetPopup();
-          }, 3000);
-        }
+    // Small delay to ensure DOM is ready
+    const loadTimeout = setTimeout(() => {
+      // Inject ad
+      if (opts.mode === "nativebanner") {
+        initNativeBanner(slotId);
       } else {
-        setAdStatus("ok");
+        const ad = AdsData[opts.bannerKey ?? "banner300x250"];
+        loadBanner(ad.key, ad.width, ad.height, slotId);
       }
-    };
 
-    // Check multiple times to catch slow-loading ads
-    const checks = [1500, 3000, 5000];
-    checks.forEach((delay, index) => {
-      setTimeout(() => {
-        if (adStatus === "loading" && !closedRef.current) {
-          checkAdLoaded();
+      // Check after 2.5s if anything rendered
+      checkRef.current = setTimeout(() => {
+        if (isSlotEmpty(slotId)) {
+          if (attempt < 1) {
+            // Retry once
+            const el = document.getElementById(slotId);
+            if (el) el.innerHTML = "";
+            setAttempt((a) => a + 1);
+          } else {
+            // Both attempts failed - call onNoReward and close
+            setAdStatus("failed");
+            if (opts?.onNoReward && !noRewardCalledRef.current) {
+              noRewardCalledRef.current = true;
+              opts.onNoReward();
+            }
+            resetPopup();
+          }
+        } else {
+          setAdStatus("ok");
         }
-      }, delay);
-    });
+      }, 2500);
+    }, 100);
 
     return () => {
-      checks.forEach((_, index) => {
-        if (checkRef.current) clearTimeout(checkRef.current);
-      });
+      clearTimeout(loadTimeout);
+      if (checkRef.current) clearTimeout(checkRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opts, attempt]);
@@ -210,28 +192,22 @@ export function AdPopupProvider() {
     };
   }, [opts, adStatus]);
 
-  /* ── close handlers with proper cleanup ── */
+  /* ── close handlers ── */
   const closeWithReward = () => {
     if (closedRef.current) return;
     closedRef.current = true;
     
     if (!rewardedRef.current) {
       rewardedRef.current = true;
-      if (opts?.onReward) opts.onReward();
+      if (opts?.onReward) {
+        opts.onReward();
+      }
     }
     resetPopup();
   };
 
-  const closeNoReward = () => {
-    if (closedRef.current) return;
-    closedRef.current = true;
-    
-    if (opts?.onNoReward) opts.onNoReward();
-    resetPopup();
-  };
-
   const resetPopup = () => {
-    // Clear all timers
+    // Clear timers
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -241,65 +217,15 @@ export function AdPopupProvider() {
       checkRef.current = null;
     }
     
-    // Clean ad slots
-    const slots = ["adp-banner-slot", "adp-native-slot"];
-    slots.forEach(slotId => {
-      const slot = document.getElementById(slotId);
-      if (slot) slot.innerHTML = "";
-    });
-    
     // Reset state
     setOpts(null);
     setCanClose(false);
     setAdStatus("loading");
     setAttempt(0);
-    rewardedRef.current = false;
   };
 
-  if (!mounted) return null;
-
-  /* ── FAILED STATE (Ad Blocker Detected) ── */
-  if (opts && adStatus === "failed") {
-    return createPortal(
-      <>
-        <style>{CSS}</style>
-        <div className="adp-overlay" onClick={(e) => {
-          if (e.target === e.currentTarget) closeNoReward();
-        }}>
-          <div className="adp-popup adp-popup--failed" style={{ width: 340 }}>
-            <div className="adp-fail-icon">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="2" opacity="0.3" />
-                <line x1="16" y1="16" x2="32" y2="32" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                <line x1="32" y1="16" x2="16" y2="32" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
-            </div>
-
-            <p className="adp-fail-title">⚠️ Ad Blocker Detected</p>
-            <p className="adp-fail-sub">
-              <strong>No reward will be granted.</strong> Please disable your ad blocker to support us and earn rewards.
-            </p>
-
-            <div className="adp-fail-hint">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5" />
-                <line x1="7" y1="4" x2="7" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <circle cx="7" cy="10.5" r="0.8" fill="currentColor" />
-              </svg>
-              Brave, Chrome, Firefox - Disable shields/popup blockers
-            </div>
-
-            <button className="adp-fail-btn" onClick={closeNoReward}>
-              Got it
-            </button>
-          </div>
-        </div>
-      </>,
-      document.body
-    );
-  }
-
-  if (!opts) return null;
+  // Don't show anything if ad blocker detected or no opts
+  if (!mounted || !opts) return null;
 
   const isNative = opts.mode === "nativebanner";
   const ad = AdsData[opts.bannerKey ?? "banner300x250"];
@@ -336,7 +262,7 @@ export function AdPopupProvider() {
                     stroke="rgba(120,120,120,0.45)" strokeWidth="2.2" strokeLinecap="round" />
                 </svg>
                 <span className="adp-ring-label">
-                  {adStatus === "loading" ? "⏳" : `${secondsLeft}s`}
+                  {adStatus === "loading" ? "…" : `${secondsLeft}s`}
                 </span>
               </div>
             ) : (
@@ -363,19 +289,19 @@ export function AdPopupProvider() {
               style={{ width: ad.width, height: ad.height }} />
           )}
 
-          {/* loading shimmer */}
+          {/* loading shimmer shown while detecting */}
           {adStatus === "loading" && (
-            <div className="adp-shimmer-label">Loading ad...</div>
+            <div className="adp-shimmer-label">Loading ad…</div>
           )}
 
           {/* status */}
           <div className={`adp-status ${canClose ? "adp-status--done" : ""}`}>
             <span className={`adp-dot ${canClose ? "adp-dot--green" : ""}`} />
             {canClose
-              ? "✓ Reward ready — tap to close"
+              ? "Reward ready — tap to close"
               : adStatus === "loading"
-                ? "⟳ Loading ad..."
-                : `⏱️ Available in ${secondsLeft}s`}
+                ? "Loading ad…"
+                : `Available in ${secondsLeft}s`}
           </div>
 
         </div>
@@ -386,7 +312,20 @@ export function AdPopupProvider() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   CSS (same as before, keeping your styling)
+   HELPER
+═══════════════════════════════════════════════════════════ */
+function isSlotEmpty(id: string): boolean {
+  const el = document.getElementById(id);
+  if (!el) return true;
+  // has visible child elements or iframe = loaded
+  const hasIframe = el.querySelector("iframe");
+  const hasImg = el.querySelector("img");
+  const hasText = (el.innerText || "").trim().length > 10;
+  return !hasIframe && !hasImg && !hasText;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CSS
 ═══════════════════════════════════════════════════════════ */
 const CSS = `
   @keyframes adp-in  { from{opacity:0} to{opacity:1} }
@@ -446,76 +385,13 @@ const CSS = `
     color:#f1f5f9;
   }
 
-  /* FAILED POPUP */
-  .adp-popup--failed {
-    gap:12px;
-    text-align:center;
-  }
-  .adp-fail-icon {
-    margin-top:8px;
-    color:#ef4444;
-    opacity:0.85;
-  }
-  .adp-fail-title {
-    margin:0;
-    font-size:17px; font-weight:800; letter-spacing:-0.02em;
-    font-family:system-ui,-apple-system,sans-serif;
-    color:#dc2626;
-  }
-  @media(prefers-color-scheme:dark){ .adp-fail-title{color:#fca5a5;} }
-  .dark .adp-fail-title{color:#fca5a5;}
-
-  .adp-fail-sub {
-    margin:0;
-    font-size:13px; line-height:1.55;
-    font-family:system-ui,-apple-system,sans-serif;
-    color:rgba(0,0,0,0.55);
-    max-width:270px;
-  }
-  @media(prefers-color-scheme:dark){ .adp-fail-sub{color:rgba(255,255,255,0.5);} }
-  .dark .adp-fail-sub{color:rgba(255,255,255,0.5);}
-  .adp-fail-sub strong{ color:inherit; font-weight:700; }
-
-  .adp-fail-hint {
-    display:flex; align-items:center; gap:6px;
-    font-size:11px; font-weight:600;
-    font-family:system-ui,-apple-system,sans-serif;
-    padding:7px 14px; border-radius:99px;
-    background:rgba(239,68,68,0.07);
-    border:1px solid rgba(239,68,68,0.18);
-    color:#b91c1c;
-  }
-  @media(prefers-color-scheme:dark){
-    .adp-fail-hint{ background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.25); color:#fca5a5; }
-  }
-  .dark .adp-fail-hint{ background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.25); color:#fca5a5; }
-
-  .adp-fail-btn {
-    margin-top:4px; margin-bottom:4px;
-    padding:10px 36px; border-radius:12px;
-    font-size:14px; font-weight:700;
-    font-family:system-ui,-apple-system,sans-serif;
-    cursor:pointer;
-    transition:background 0.18s, transform 0.12s;
-    background:rgba(0,0,0,0.07);
-    border:1.5px solid rgba(0,0,0,0.12);
-    color:#374151;
-  }
-  .adp-fail-btn:hover{ background:rgba(0,0,0,0.13); transform:scale(1.03); }
-  .adp-fail-btn:active{ transform:scale(0.96); }
-  @media(prefers-color-scheme:dark){
-    .adp-fail-btn{ background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.12); color:#e2e8f0; }
-    .adp-fail-btn:hover{ background:rgba(255,255,255,0.14); }
-  }
-  .dark .adp-fail-btn{ background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.12); color:#e2e8f0; }
-  .dark .adp-fail-btn:hover{ background:rgba(255,255,255,0.14); }
-
   /* close area */
   .adp-close-wrap {
     position:absolute; top:12px; right:12px;
     display:flex; flex-direction:column; align-items:center; gap:2px;
   }
 
+  /* locked ring */
   .adp-ring {
     display:flex; flex-direction:column; align-items:center; gap:2px;
     cursor:not-allowed; user-select:none;
@@ -527,6 +403,7 @@ const CSS = `
   @media(prefers-color-scheme:dark){ .adp-ring-label{color:rgba(255,255,255,0.3);} }
   .dark .adp-ring-label{color:rgba(255,255,255,0.3);}
 
+  /* unlocked button */
   .adp-close-btn {
     width:30px; height:30px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
