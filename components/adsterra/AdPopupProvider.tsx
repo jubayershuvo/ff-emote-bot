@@ -19,6 +19,56 @@ interface AdPopupOptions {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   FAST AD BLOCKER DETECTION
+   Checks multiple signals before even trying to inject ads
+═══════════════════════════════════════════════════════════ */
+async function detectAdBlocker(): Promise<boolean> {
+  // Method 1: Try fetching a known ad network URL (fastest signal)
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 1500);
+    const res = await fetch(
+      "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js",
+      { method: "HEAD", mode: "no-cors", signal: controller.signal }
+    );
+    clearTimeout(timeout);
+    // If fetch resolves (even opaque), ad network is reachable
+    void res;
+  } catch {
+    return true; // blocked or aborted = ad blocker present
+  }
+
+  // Method 2: Check if adsbygoogle is defined (injected by Google tag)
+  if (
+    typeof window !== "undefined" &&
+    !(window as any).adsbygoogle &&
+    !(window as any).googletag
+  ) {
+    // Method 3: Create a bait element and check if it gets hidden/removed
+    const bait = document.createElement("div");
+    bait.className = "ad adsbox ad-slot adBanner pub_300x250";
+    bait.style.cssText =
+      "width:1px;height:1px;position:absolute;left:-9999px;top:-9999px;";
+    bait.innerHTML = "&nbsp;";
+    document.body.appendChild(bait);
+
+    await new Promise((r) => setTimeout(r, 150));
+
+    const blocked =
+      bait.offsetHeight === 0 ||
+      bait.offsetParent === null ||
+      window.getComputedStyle(bait).display === "none" ||
+      window.getComputedStyle(bait).visibility === "hidden";
+
+    document.body.removeChild(bait);
+
+    if (blocked) return true;
+  }
+
+  return false;
+}
+
+/* ═══════════════════════════════════════════════════════════
    GLOBAL TRIGGER
 ═══════════════════════════════════════════════════════════ */
 let _open: ((opts: AdPopupOptions) => void) | null = null;
@@ -38,8 +88,11 @@ export const showBannerAd = (
   onNoReward?: () => void
 ) => openAdPopup({ mode: "banner", bannerKey, watchDuration, onReward, onNoReward });
 
-export const showNativeAd = (onReward?: () => void, watchDuration = 10, onNoReward?: () => void) =>
-  openAdPopup({ mode: "nativebanner", watchDuration, onReward, onNoReward });
+export const showNativeAd = (
+  onReward?: () => void,
+  watchDuration = 10,
+  onNoReward?: () => void
+) => openAdPopup({ mode: "nativebanner", watchDuration, onReward, onNoReward });
 
 /* ═══════════════════════════════════════════════════════════
    HELPERS
@@ -47,7 +100,6 @@ export const showNativeAd = (onReward?: () => void, watchDuration = 10, onNoRewa
 function isSlotEmpty(id: string): boolean {
   const el = document.getElementById(id);
   if (!el) return true;
-  // has visible child elements or iframe = loaded
   const hasIframe = el.querySelector("iframe");
   const hasImg = el.querySelector("img");
   const hasText = (el.innerText || "").trim().length > 10;
@@ -63,12 +115,13 @@ export function AdPopupProvider() {
   const [canClose, setCanClose] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // ad-load state
-  const [adStatus, setAdStatus] = useState<"loading" | "ok" | "failed">("loading");
-  const [attempt, setAttempt] = useState(0); // 0-based; max 2 tries (0,1)
+  // "checking" = fast blocker scan running, "loading" = injecting ad,
+  // "ok" = ad rendered, "failed" = blocked/failed
+  const [adStatus, setAdStatus] = useState<"checking" | "loading" | "ok" | "failed">("checking");
+  const [attempt, setAttempt] = useState(0);
 
   const rewardedRef = useRef(false);
-  const closedRef = useRef(false); // Prevent double callbacks
+  const closedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const checkRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -81,37 +134,47 @@ export function AdPopupProvider() {
   /* register global trigger */
   useEffect(() => {
     _open = (newOpts) => {
-      // Reset all states
       if (timerRef.current) clearInterval(timerRef.current);
       if (checkRef.current) clearTimeout(checkRef.current);
-      
+
       rewardedRef.current = false;
       closedRef.current = false;
       setCanClose(false);
       setSecondsLeft(newOpts.watchDuration ?? 10);
-      setAdStatus("loading");
+      setAdStatus("checking"); // start with fast blocker scan
       setAttempt(0);
       setOpts(newOpts);
     };
-    return () => { 
+    return () => {
       _open = null;
       if (timerRef.current) clearInterval(timerRef.current);
       if (checkRef.current) clearTimeout(checkRef.current);
     };
   }, []);
 
-  /* ── load ad & check emptiness ── */
+  /* ── STEP 1: fast ad blocker detection before any injection ── */
   useEffect(() => {
-    if (!opts || adStatus === "ok" || adStatus === "failed") return;
+    if (!opts || adStatus !== "checking") return;
+
+    detectAdBlocker().then((isBlocked) => {
+      if (isBlocked) {
+        setAdStatus("failed");
+        setCanClose(true);
+      } else {
+        setAdStatus("loading"); // pass → try to inject
+      }
+    });
+  }, [opts, adStatus]);
+
+  /* ── STEP 2: inject ad & verify it rendered ── */
+  useEffect(() => {
+    if (!opts || adStatus !== "loading") return;
 
     const slotId = opts.mode === "nativebanner" ? "adp-native-slot" : "adp-banner-slot";
 
-    // Clear any pending check
     if (checkRef.current) clearTimeout(checkRef.current);
 
-    // Small delay to ensure DOM is ready
     const loadTimeout = setTimeout(() => {
-      // Inject ad
       if (opts.mode === "nativebanner") {
         initNativeBanner(slotId);
       } else {
@@ -123,12 +186,11 @@ export function AdPopupProvider() {
       checkRef.current = setTimeout(() => {
         if (isSlotEmpty(slotId)) {
           if (attempt < 1) {
-            // Retry once: clear slot and re-inject
             const el = document.getElementById(slotId);
             if (el) el.innerHTML = "";
             setAttempt((a) => a + 1);
           } else {
-            // Both attempts failed
+            // Both injection attempts failed → must be blocked
             setAdStatus("failed");
             setCanClose(true);
           }
@@ -143,9 +205,9 @@ export function AdPopupProvider() {
       if (checkRef.current) clearTimeout(checkRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opts, attempt]);
+  }, [opts, attempt, adStatus]);
 
-  /* ── countdown (only when ad loaded ok) ── */
+  /* ── STEP 3: countdown only after ad confirmed loaded ── */
   useEffect(() => {
     if (!opts || adStatus !== "ok") return;
     if (timerRef.current) clearInterval(timerRef.current);
@@ -161,52 +223,35 @@ export function AdPopupProvider() {
       });
     }, 1000);
 
-    return () => { 
-      if (timerRef.current) clearInterval(timerRef.current); 
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [opts, adStatus]);
 
-  /* ── close handlers with proper callback execution ── */
+  /* ── close handlers ── */
   const closeWithReward = () => {
-    if (closedRef.current) return; // Prevent multiple calls
+    if (closedRef.current) return;
     closedRef.current = true;
-    
     if (!rewardedRef.current) {
       rewardedRef.current = true;
-      // Execute onReward callback
-      if (opts?.onReward) {
-        opts.onReward();
-      }
+      opts?.onReward?.();
     }
     resetPopup();
   };
 
   const closeNoReward = () => {
-    if (closedRef.current) return; // Prevent multiple calls
+    if (closedRef.current) return;
     closedRef.current = true;
-    
-    // Execute onNoReward callback
-    if (opts?.onNoReward) {
-      opts.onNoReward();
-    }
+    opts?.onNoReward?.();
     resetPopup();
   };
 
   const resetPopup = () => {
-    // Clear timers
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    if (checkRef.current) {
-      clearTimeout(checkRef.current);
-      checkRef.current = null;
-    }
-    
-    // Reset state
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (checkRef.current) { clearTimeout(checkRef.current); checkRef.current = null; }
     setOpts(null);
     setCanClose(false);
-    setAdStatus("loading");
+    setAdStatus("checking");
     setAttempt(0);
   };
 
@@ -221,7 +266,7 @@ export function AdPopupProvider() {
   const circ = 2 * Math.PI * R;
   const dashOffset = circ * (secondsLeft / duration);
 
-  /* ── FAILED STATE ── */
+  /* ── FAILED / BLOCKED STATE ── */
   if (adStatus === "failed") {
     return createPortal(
       <>
@@ -229,18 +274,36 @@ export function AdPopupProvider() {
         <div className="adp-overlay">
           <div className="adp-popup adp-popup--failed" style={{ width: 320 }}>
             <div className="adp-fail-icon">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="2" opacity="0.3" />
-                <line x1="13" y1="13" x2="27" y2="27" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                <line x1="27" y1="13" x2="13" y2="27" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+              <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+                <circle cx="22" cy="22" r="20" stroke="currentColor" strokeWidth="2" opacity="0.25" />
+                {/* Shield icon to indicate blocker */}
+                <path d="M22 10 L32 14 L32 22 C32 28 22 34 22 34 C22 34 12 28 12 22 L12 14 Z"
+                  stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none" opacity="0.7" />
+                <line x1="17" y1="17" x2="27" y2="27" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                <line x1="27" y1="17" x2="17" y2="27" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
               </svg>
             </div>
 
-            <p className="adp-fail-title">Ad Failed to Load</p>
+            <p className="adp-fail-title">Ad Blocker Detected</p>
             <p className="adp-fail-sub">
-              It looks like an <strong>ad blocker</strong> is preventing the ad from showing.
-              Please disable your ad blocker to support us and earn rewards.
+              Your browser&apos;s <strong>ad blocker or shields</strong> (e.g. Brave Shields, uBlock, AdBlock)
+              is preventing ads from loading. Please disable it for this site to earn rewards.
             </p>
+
+            <div className="adp-fail-steps">
+              <div className="adp-fail-step">
+                <span className="adp-fail-step-num">1</span>
+                <span>Click the shield / extension icon in your browser toolbar</span>
+              </div>
+              <div className="adp-fail-step">
+                <span className="adp-fail-step-num">2</span>
+                <span>Disable blocking for this site</span>
+              </div>
+              <div className="adp-fail-step">
+                <span className="adp-fail-step-num">3</span>
+                <span>Reload the page and try again</span>
+              </div>
+            </div>
 
             <div className="adp-fail-hint">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -252,7 +315,7 @@ export function AdPopupProvider() {
             </div>
 
             <button className="adp-fail-btn" onClick={closeNoReward}>
-              Close
+              Close (No Reward)
             </button>
           </div>
         </div>
@@ -261,15 +324,30 @@ export function AdPopupProvider() {
     );
   }
 
-  /* ── NORMAL STATE ── */
+  /* ── CHECKING STATE (fast spinner while scanning) ── */
+  if (adStatus === "checking") {
+    return createPortal(
+      <>
+        <style>{CSS}</style>
+        <div className="adp-overlay">
+          <div className="adp-popup" style={{ width: 280 }}>
+            <div className="adp-checking-spinner" />
+            <p className="adp-checking-label">Checking ad availability…</p>
+          </div>
+        </div>
+      </>,
+      document.body
+    );
+  }
+
+  /* ── NORMAL (loading / ok) STATE ── */
   return createPortal(
     <>
       <style>{CSS}</style>
-
       <div className="adp-overlay" onClick={(e) => e.target === e.currentTarget && canClose && closeWithReward()}>
         <div className="adp-popup" style={{ width: popupW }}>
 
-          {/* ── close ring / button ── */}
+          {/* close ring / button */}
           <div className="adp-close-wrap">
             {!canClose ? (
               <div className="adp-ring" title="Watch to unlock">
@@ -300,13 +378,13 @@ export function AdPopupProvider() {
             )}
           </div>
 
-          {/* ── header ── */}
+          {/* header */}
           <div className="adp-header">
             <span className="adp-badge">● SPONSORED</span>
             <p className="adp-title">{isNative ? "Recommended" : "Featured Ad"}</p>
           </div>
 
-          {/* ── ad slot ── */}
+          {/* ad slot */}
           {isNative ? (
             <div id="adp-native-slot" className="adp-slot adp-slot--native" />
           ) : (
@@ -314,12 +392,11 @@ export function AdPopupProvider() {
               style={{ width: ad.width, height: ad.height }} />
           )}
 
-          {/* loading shimmer shown while detecting */}
           {adStatus === "loading" && (
             <div className="adp-shimmer-label">Loading ad…</div>
           )}
 
-          {/* ── status ── */}
+          {/* status */}
           <div className={`adp-status ${canClose ? "adp-status--done" : ""}`}>
             <span className={`adp-dot ${canClose ? "adp-dot--green" : ""}`} />
             {canClose
@@ -351,12 +428,8 @@ const CSS = `
     100% { transform:scale(1)    rotate(0);     opacity:1 }
   }
   @keyframes adp-pulse  { 0%,100%{opacity:1} 50%{opacity:0.2} }
-  @keyframes adp-shimmer{
-    0%  { background-position: -400px 0 }
-    100%{ background-position:  400px 0 }
-  }
+  @keyframes adp-spin   { to{transform:rotate(360deg)} }
 
-  /* overlay */
   .adp-overlay {
     position:fixed; inset:0; z-index:9999;
     display:flex; align-items:center; justify-content:center;
@@ -367,7 +440,6 @@ const CSS = `
   @media(prefers-color-scheme:dark){ .adp-overlay{background:rgba(0,0,8,0.8);} }
   .dark .adp-overlay{background:rgba(0,0,8,0.8);}
 
-  /* card */
   .adp-popup {
     position:relative;
     border-radius:20px;
@@ -376,10 +448,7 @@ const CSS = `
     animation:adp-pop 0.36s cubic-bezier(0.22,1,0.36,1);
     background:#ffffff;
     border:1px solid rgba(0,0,0,0.08);
-    box-shadow:
-      0 2px 4px rgba(0,0,0,0.04),
-      0 8px 24px rgba(0,0,0,0.08),
-      0 24px 64px rgba(0,0,0,0.12);
+    box-shadow:0 2px 4px rgba(0,0,0,0.04),0 8px 24px rgba(0,0,0,0.08),0 24px 64px rgba(0,0,0,0.12);
     color:#111827;
   }
   @media(prefers-color-scheme:dark){
@@ -397,16 +466,29 @@ const CSS = `
     color:#f1f5f9;
   }
 
+  /* ── CHECKING STATE ── */
+  .adp-checking-spinner {
+    width:36px; height:36px; border-radius:50%;
+    border:3px solid rgba(139,92,246,0.2);
+    border-top-color:#8b5cf6;
+    animation:adp-spin 0.8s linear infinite;
+    margin:8px 0 4px;
+  }
+  .adp-checking-label {
+    margin:0 0 8px;
+    font-size:13px; font-weight:600;
+    font-family:system-ui,-apple-system,sans-serif;
+    color:rgba(0,0,0,0.4);
+    animation:adp-pulse 1.4s ease-in-out infinite;
+  }
+  @media(prefers-color-scheme:dark){ .adp-checking-label{color:rgba(255,255,255,0.35);} }
+  .dark .adp-checking-label{color:rgba(255,255,255,0.35);}
+
   /* ── FAILED POPUP ── */
-  .adp-popup--failed {
-    gap:12px;
-    text-align:center;
-  }
-  .adp-fail-icon {
-    margin-top:8px;
-    color:#ef4444;
-    opacity:0.85;
-  }
+  .adp-popup--failed { gap:12px; text-align:center; }
+
+  .adp-fail-icon { margin-top:8px; color:#ef4444; opacity:0.85; }
+
   .adp-fail-title {
     margin:0;
     font-size:17px; font-weight:800; letter-spacing:-0.02em;
@@ -427,6 +509,43 @@ const CSS = `
   .dark .adp-fail-sub{color:rgba(255,255,255,0.5);}
   .adp-fail-sub strong{ color:inherit; font-weight:700; }
 
+  /* step-by-step guide */
+  .adp-fail-steps {
+    display:flex; flex-direction:column; gap:8px;
+    width:100%; max-width:270px;
+    background:rgba(0,0,0,0.03);
+    border:1px solid rgba(0,0,0,0.07);
+    border-radius:12px; padding:12px 14px;
+    text-align:left;
+  }
+  @media(prefers-color-scheme:dark){
+    .adp-fail-steps{ background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.08); }
+  }
+  .dark .adp-fail-steps{ background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.08); }
+
+  .adp-fail-step {
+    display:flex; align-items:flex-start; gap:10px;
+    font-size:12px; line-height:1.4;
+    font-family:system-ui,-apple-system,sans-serif;
+    color:rgba(0,0,0,0.6);
+  }
+  @media(prefers-color-scheme:dark){ .adp-fail-step{color:rgba(255,255,255,0.5);} }
+  .dark .adp-fail-step{color:rgba(255,255,255,0.5);}
+
+  .adp-fail-step-num {
+    flex-shrink:0;
+    width:20px; height:20px; border-radius:50%;
+    background:rgba(139,92,246,0.15);
+    border:1px solid rgba(139,92,246,0.35);
+    color:#7c3aed;
+    font-size:11px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+  @media(prefers-color-scheme:dark){
+    .adp-fail-step-num{ background:rgba(139,92,246,0.2); border-color:rgba(139,92,246,0.4); color:#a78bfa; }
+  }
+  .dark .adp-fail-step-num{ background:rgba(139,92,246,0.2); border-color:rgba(139,92,246,0.4); color:#a78bfa; }
+
   .adp-fail-hint {
     display:flex; align-items:center; gap:6px;
     font-size:11px; font-weight:600;
@@ -443,8 +562,8 @@ const CSS = `
 
   .adp-fail-btn {
     margin-top:4px; margin-bottom:4px;
-    padding:10px 36px; border-radius:12px;
-    font-size:14px; font-weight:700;
+    padding:10px 28px; border-radius:12px;
+    font-size:13px; font-weight:700;
     font-family:system-ui,-apple-system,sans-serif;
     cursor:pointer;
     transition:background 0.18s, transform 0.12s;
@@ -461,13 +580,10 @@ const CSS = `
   .dark .adp-fail-btn{ background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.12); color:#e2e8f0; }
   .dark .adp-fail-btn:hover{ background:rgba(255,255,255,0.14); }
 
-  /* close area */
   .adp-close-wrap {
     position:absolute; top:12px; right:12px;
     display:flex; flex-direction:column; align-items:center; gap:2px;
   }
-
-  /* locked ring */
   .adp-ring {
     display:flex; flex-direction:column; align-items:center; gap:2px;
     cursor:not-allowed; user-select:none;
@@ -479,7 +595,6 @@ const CSS = `
   @media(prefers-color-scheme:dark){ .adp-ring-label{color:rgba(255,255,255,0.3);} }
   .dark .adp-ring-label{color:rgba(255,255,255,0.3);}
 
-  /* unlocked button */
   .adp-close-btn {
     width:30px; height:30px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
@@ -503,7 +618,6 @@ const CSS = `
   .dark .adp-close-btn{ background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.4); color:#fca5a5; }
   .dark .adp-close-btn:hover{ background:rgba(239,68,68,0.28); border-color:rgba(239,68,68,0.7); box-shadow:0 0 16px rgba(239,68,68,0.25); }
 
-  /* header */
   .adp-header{ display:flex; flex-direction:column; align-items:center; gap:3px; margin-top:8px; }
   .adp-badge{
     font-size:8.5px; font-weight:800; letter-spacing:0.16em; font-family:monospace;
@@ -516,7 +630,6 @@ const CSS = `
     font-family:system-ui,-apple-system,sans-serif; letter-spacing:-0.02em;
   }
 
-  /* ad slots */
   .adp-slot {
     border-radius:12px; overflow:hidden;
     background:rgba(0,0,0,0.04);
@@ -528,7 +641,6 @@ const CSS = `
   }
   .dark .adp-slot{ background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.06); }
 
-  /* shimmer label */
   .adp-shimmer-label {
     font-size:11px; font-weight:600; font-family:monospace;
     color:rgba(0,0,0,0.3); letter-spacing:0.04em;
@@ -537,7 +649,6 @@ const CSS = `
   @media(prefers-color-scheme:dark){ .adp-shimmer-label{color:rgba(255,255,255,0.25);} }
   .dark .adp-shimmer-label{color:rgba(255,255,255,0.25);}
 
-  /* status bar */
   .adp-status {
     display:flex; align-items:center; gap:8px;
     font-size:11px; font-weight:600; letter-spacing:0.01em;

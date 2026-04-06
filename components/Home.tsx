@@ -49,7 +49,7 @@ export default function HomePage() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const addUID = () => {
-    if (uids.length < 4) setUids([...uids, ""]);
+    if (uids?.length < 4) setUids([...uids, ""]);
   };
   const isDesktop = () => {
     return typeof window !== "undefined" && window.innerWidth >= 768;
@@ -73,14 +73,14 @@ export default function HomePage() {
   const saveUids = () => {
     // Filter out empty UIDs
     const nonEmptyUids = tempUids.filter((uid) => uid.trim() !== "");
-    if (nonEmptyUids.length === 0) {
+    if (nonEmptyUids?.length === 0) {
       toast.error("At least one UID is required", {
         icon: "⚠️",
         style: { background: "#333", color: "#fff" },
       });
       return;
     }
-    setUids(nonEmptyUids.length > 0 ? nonEmptyUids : [""]);
+    setUids(nonEmptyUids?.length > 0 ? nonEmptyUids : [""]);
     closeUidPopup();
     toast.success("UIDs updated successfully!", {
       icon: "✅",
@@ -89,7 +89,7 @@ export default function HomePage() {
   };
 
   const addTempUID = () => {
-    if (tempUids.length < 4) setTempUids([...tempUids, ""]);
+    if (tempUids?.length < 4) setTempUids([...tempUids, ""]);
   };
 
   const updateTempUID = (index: number, value: string) => {
@@ -99,7 +99,7 @@ export default function HomePage() {
   };
 
   const removeTempUID = (index: number) => {
-    if (tempUids.length > 1) {
+    if (tempUids?.length > 1) {
       const updated = tempUids.filter((_, i) => i !== index);
       setTempUids(updated);
     }
@@ -126,7 +126,7 @@ export default function HomePage() {
 
   // Filter emotes based on search term and filter type
   useEffect(() => {
-    if (!emotes.length) return;
+    if (!emotes?.length) return;
 
     if (!searchTerm.trim()) {
       setFilteredEmotes(emotes);
@@ -151,7 +151,7 @@ export default function HomePage() {
     setFilteredEmotes(filtered);
 
     // Show search results count
-    if (filtered.length === 0) {
+    if (filtered?.length === 0) {
       toast(`No emotes found for "${searchTerm}"`, {
         icon: "🔍",
         style: {
@@ -193,7 +193,7 @@ export default function HomePage() {
 
     const validUIDs = uids.filter((u) => u.trim() !== "");
 
-    if (!teamCode || validUIDs.length === 0) {
+    if (!teamCode || validUIDs?.length === 0) {
       toast.error("Please enter team code and at least one UID", {
         icon: "⚠️",
         style: {
@@ -265,7 +265,7 @@ export default function HomePage() {
     try {
       const otp = await generateOTP();
       const res = await fetch(
-        `/api/load-emote?offset=${emotes.length}&limit=1000`, {
+        `/api/load-emote?offset=${emotes?.length}&limit=1000`, {
         method: "GET",
         headers: { "Content-Type": "application/json", "x-otp": otp },
       }
@@ -285,7 +285,7 @@ export default function HomePage() {
     try {
       const otp = await generateOTP();
       const res = await fetch(
-        `/api/load-emote?offset=${emotes.length}&limit=50`,
+        `/api/load-emote?offset=${emotes?.length}&limit=50`,
         {
           method: "GET",
           headers: { "Content-Type": "application/json", "x-otp": otp },
@@ -296,7 +296,7 @@ export default function HomePage() {
       // Animate new emotes appearing
       setEmotes([...emotes, ...data.emotes]);
 
-      toast.success(`Loaded ${data.emotes.length} more emotes!`, {
+      toast.success(`Loaded ${data.emotes?.length} more emotes!`, {
         icon: "📦",
         style: {
           background: "#333",
@@ -673,8 +673,8 @@ export default function HomePage() {
             <div className="flex justify-between items-center">
               <label className="text-zinc-400">UIDs</label>
               <span className="text-xs text-zinc-500">
-                {uids.filter((uid) => uid.trim() !== "").length} active /{" "}
-                {uids.length} total
+                {uids.filter((uid) => uid.trim() !== "")?.length} active /{" "}
+                {uids?.length} total
               </span>
             </div>
             {uids.map((uid, index) => (
@@ -690,7 +690,7 @@ export default function HomePage() {
               </div>
             ))}
 
-            {uids.length < 4 && (
+            {uids?.length < 4 && (
               <button
                 onClick={addUID}
                 className="text-sm text-cyan-400 hover:text-cyan-300 transition-all hover:translate-x-2 flex items-center gap-2 group"
@@ -804,9 +804,9 @@ export default function HomePage() {
             <div className="mt-3 text-sm text-zinc-400">
               Found{" "}
               <span className="text-purple-400 font-bold">
-                {filteredEmotes.length}
+                {filteredEmotes?.length}
               </span>{" "}
-              emote{filteredEmotes.length !== 1 ? "s" : ""}
+              emote{filteredEmotes?.length !== 1 ? "s" : ""}
               {searchFilter === "name"
                 ? " by name"
                 : searchFilter === "id"
@@ -817,7 +817,7 @@ export default function HomePage() {
         </div>
 
         {/* EMOTE GRID */}
-        {filteredEmotes.length > 0 ? (
+        {filteredEmotes?.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredEmotes.map((emote, index) => (
               <div
@@ -881,7 +881,7 @@ export default function HomePage() {
         )}
 
         {/* Load More Button */}
-        {emotes.length > 0 && filteredEmotes.length > 0 && (
+        {emotes?.length > 0 && filteredEmotes?.length > 0 && (
           <button
             onClick={loadMoreEmotes}
             disabled={loadingMore}
@@ -910,7 +910,7 @@ export default function HomePage() {
       <button onClick={openUidPopup} className="floating-button">
         <span className="text-2xl">👥</span>
         <span className="floating-button-badge">
-          {uids.filter((uid) => uid.trim() !== "").length}
+          {uids.filter((uid) => uid.trim() !== "")?.length}
         </span>
       </button>
 
@@ -940,10 +940,10 @@ export default function HomePage() {
                       onChange={(e) => updateTempUID(index, e.target.value)}
                       placeholder={`UID ${index + 1}`}
                       className="w-full bg-zinc-800 p-3 rounded-lg border border-zinc-600 input-focus-effect transition-all"
-                      autoFocus={index === tempUids.length - 1}
+                      autoFocus={index === tempUids?.length - 1}
                     />
                   </div>
-                  {tempUids.length > 1 && (
+                  {tempUids?.length > 1 && (
                     <button
                       onClick={() => removeTempUID(index)}
                       className="text-zinc-400 hover:text-red-400 transition-colors p-2"
@@ -956,7 +956,7 @@ export default function HomePage() {
               ))}
             </div>
 
-            {tempUids.length < 4 && (
+            {tempUids?.length < 4 && (
               <button
                 onClick={addTempUID}
                 className="mt-4 text-sm text-cyan-400 hover:text-cyan-300 transition-all hover:translate-x-2 flex items-center gap-2 group"
