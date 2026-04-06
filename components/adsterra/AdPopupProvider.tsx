@@ -47,7 +47,6 @@ export const showNativeAd = (onReward?: () => void, watchDuration = 10, onNoRewa
 function isSlotEmpty(id: string): boolean {
   const el = document.getElementById(id);
   if (!el) return true;
-  // has visible child elements or iframe = loaded
   const hasIframe = el.querySelector("iframe");
   const hasImg = el.querySelector("img");
   const hasText = (el.innerText || "").trim().length > 10;
@@ -63,25 +62,21 @@ export function AdPopupProvider() {
   const [canClose, setCanClose] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // ad-load state
   const [adStatus, setAdStatus] = useState<"loading" | "ok" | "failed">("loading");
-  const [attempt, setAttempt] = useState(0); // 0-based; max 2 tries (0,1)
+  const [attempt, setAttempt] = useState(0);
 
   const rewardedRef = useRef(false);
-  const closedRef = useRef(false); // Prevent double callbacks
+  const closedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const checkRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /* client-only guard */
   useEffect(() => {
     const id = window.requestAnimationFrame(() => setMounted(true));
     return () => window.cancelAnimationFrame(id);
   }, []);
 
-  /* register global trigger */
   useEffect(() => {
     _open = (newOpts) => {
-      // Reset all states
       if (timerRef.current) clearInterval(timerRef.current);
       if (checkRef.current) clearTimeout(checkRef.current);
       
@@ -100,18 +95,14 @@ export function AdPopupProvider() {
     };
   }, []);
 
-  /* ── load ad & check emptiness ── */
   useEffect(() => {
     if (!opts || adStatus === "ok" || adStatus === "failed") return;
 
     const slotId = opts.mode === "nativebanner" ? "adp-native-slot" : "adp-banner-slot";
 
-    // Clear any pending check
     if (checkRef.current) clearTimeout(checkRef.current);
 
-    // Small delay to ensure DOM is ready
     const loadTimeout = setTimeout(() => {
-      // Inject ad
       if (opts.mode === "nativebanner") {
         initNativeBanner(slotId);
       } else {
@@ -119,16 +110,13 @@ export function AdPopupProvider() {
         loadBanner(ad.key, ad.width, ad.height, slotId);
       }
 
-      // Check after 2.5s if anything rendered
       checkRef.current = setTimeout(() => {
         if (isSlotEmpty(slotId)) {
           if (attempt < 1) {
-            // Retry once: clear slot and re-inject
             const el = document.getElementById(slotId);
             if (el) el.innerHTML = "";
             setAttempt((a) => a + 1);
           } else {
-            // Both attempts failed
             setAdStatus("failed");
             setCanClose(true);
           }
@@ -142,10 +130,8 @@ export function AdPopupProvider() {
       clearTimeout(loadTimeout);
       if (checkRef.current) clearTimeout(checkRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opts, attempt]);
 
-  /* ── countdown (only when ad loaded ok) ── */
   useEffect(() => {
     if (!opts || adStatus !== "ok") return;
     if (timerRef.current) clearInterval(timerRef.current);
@@ -166,14 +152,12 @@ export function AdPopupProvider() {
     };
   }, [opts, adStatus]);
 
-  /* ── close handlers with proper callback execution ── */
   const closeWithReward = () => {
-    if (closedRef.current) return; // Prevent multiple calls
+    if (closedRef.current) return;
     closedRef.current = true;
     
     if (!rewardedRef.current) {
       rewardedRef.current = true;
-      // Execute onReward callback
       if (opts?.onReward) {
         opts.onReward();
       }
@@ -182,10 +166,9 @@ export function AdPopupProvider() {
   };
 
   const closeNoReward = () => {
-    if (closedRef.current) return; // Prevent multiple calls
+    if (closedRef.current) return;
     closedRef.current = true;
     
-    // Execute onNoReward callback
     if (opts?.onNoReward) {
       opts.onNoReward();
     }
@@ -193,7 +176,6 @@ export function AdPopupProvider() {
   };
 
   const resetPopup = () => {
-    // Clear timers
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -203,7 +185,6 @@ export function AdPopupProvider() {
       checkRef.current = null;
     }
     
-    // Reset state
     setOpts(null);
     setCanClose(false);
     setAdStatus("loading");
@@ -221,346 +202,135 @@ export function AdPopupProvider() {
   const circ = 2 * Math.PI * R;
   const dashOffset = circ * (secondsLeft / duration);
 
-  /* ── FAILED STATE ── */
   if (adStatus === "failed") {
     return createPortal(
-      <>
-        <style>{CSS}</style>
-        <div className="adp-overlay">
-          <div className="adp-popup adp-popup--failed" style={{ width: 320 }}>
-            <div className="adp-fail-icon">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="2" opacity="0.3" />
-                <line x1="13" y1="13" x2="27" y2="27" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                <line x1="27" y1="13" x2="13" y2="27" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
-            </div>
-
-            <p className="adp-fail-title">Ad Failed to Load</p>
-            <p className="adp-fail-sub">
-              It looks like an <strong>ad blocker</strong> is preventing the ad from showing.
-              Please disable your ad blocker to support us and earn rewards.
-            </p>
-
-            <div className="adp-fail-hint">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5" />
-                <line x1="7" y1="4" x2="7" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <circle cx="7" cy="10.5" r="0.8" fill="currentColor" />
-              </svg>
-              No reward will be granted without a valid ad view.
-            </div>
-
-            <button className="adp-fail-btn" onClick={closeNoReward}>
-              Close
-            </button>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="relative w-[320px] rounded-2xl bg-white dark:bg-gradient-to-br dark:from-gray-900 dark:to-gray-950 border border-black/10 dark:border-white/10 shadow-xl text-center p-6 gap-3 flex flex-col animate-in zoom-in-95 duration-300">
+          <div className="text-red-500 dark:text-red-400 mt-2">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" className="mx-auto">
+              <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+              <line x1="13" y1="13" x2="27" y2="27" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="27" y1="13" x2="13" y2="27" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
           </div>
+
+          <p className="text-red-600 dark:text-red-400 text-lg font-extrabold tracking-tight">Ad Failed to Load</p>
+          <p className="text-sm text-black/55 dark:text-white/50 leading-relaxed">
+            It looks like an <strong>ad blocker</strong> is preventing the ad from showing.
+            Please disable your ad blocker to support us and earn rewards.
+          </p>
+
+          <div className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 mx-auto">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5" />
+              <line x1="7" y1="4" x2="7" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="7" cy="10.5" r="0.8" fill="currentColor" />
+            </svg>
+            No reward will be granted without a valid ad view.
+          </div>
+
+          <button 
+            onClick={closeNoReward}
+            className="mt-2 px-9 py-2.5 rounded-xl font-bold text-sm bg-black/10 dark:bg-white/10 border border-black/15 dark:border-white/15 hover:bg-black/20 dark:hover:bg-white/20 transition-all hover:scale-105 active:scale-95"
+          >
+            Close
+          </button>
         </div>
-      </>,
+      </div>,
       document.body
     );
   }
 
-  /* ── NORMAL STATE ── */
   return createPortal(
-    <>
-      <style>{CSS}</style>
-
-      <div className="adp-overlay" onClick={(e) => e.target === e.currentTarget && canClose && closeWithReward()}>
-        <div className="adp-popup" style={{ width: popupW }}>
-
-          {/* ── close ring / button ── */}
-          <div className="adp-close-wrap">
-            {!canClose ? (
-              <div className="adp-ring" title="Watch to unlock">
-                <svg width="38" height="38" viewBox="0 0 40 40">
-                  <circle cx="20" cy="20" r={R} fill="none"
-                    stroke="rgba(150,150,150,0.2)" strokeWidth="2.5" />
-                  <circle cx="20" cy="20" r={R} fill="none"
-                    stroke="#facc15" strokeWidth="2.5" strokeLinecap="round"
-                    strokeDasharray={circ} strokeDashoffset={dashOffset}
-                    transform="rotate(-90 20 20)"
-                    style={{ transition: "stroke-dashoffset 0.95s linear" }} />
-                  <line x1="14" y1="14" x2="26" y2="26"
-                    stroke="rgba(120,120,120,0.45)" strokeWidth="2.2" strokeLinecap="round" />
-                  <line x1="26" y1="14" x2="14" y2="26"
-                    stroke="rgba(120,120,120,0.45)" strokeWidth="2.2" strokeLinecap="round" />
-                </svg>
-                <span className="adp-ring-label">
-                  {adStatus === "loading" ? "…" : `${secondsLeft}s`}
-                </span>
-              </div>
-            ) : (
-              <button className="adp-close-btn" onClick={closeWithReward} aria-label="Close">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  <line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
-            )}
-          </div>
-
-          {/* ── header ── */}
-          <div className="adp-header">
-            <span className="adp-badge">● SPONSORED</span>
-            <p className="adp-title">{isNative ? "Recommended" : "Featured Ad"}</p>
-          </div>
-
-          {/* ── ad slot ── */}
-          {isNative ? (
-            <div id="adp-native-slot" className="adp-slot adp-slot--native" />
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={(e) => e.target === e.currentTarget && canClose && closeWithReward()}
+    >
+      <div 
+        className="relative rounded-2xl p-5 flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300 bg-white dark:bg-gradient-to-br dark:from-gray-900 dark:to-gray-950 border border-black/10 dark:border-white/10 shadow-xl"
+        style={{ width: popupW }}
+      >
+        {/* Close button area */}
+        <div className="absolute top-3 right-3">
+          {!canClose ? (
+            <div className="flex flex-col items-center gap-0.5 cursor-not-allowed select-none">
+              <svg width="38" height="38" viewBox="0 0 40 40" className="drop-shadow-sm">
+                <circle cx="20" cy="20" r={R} fill="none" stroke="rgba(150,150,150,0.2)" strokeWidth="2.5" />
+                <circle 
+                  cx="20" cy="20" r={R} fill="none" 
+                  stroke="#facc15" strokeWidth="2.5" strokeLinecap="round"
+                  strokeDasharray={circ} strokeDashoffset={dashOffset}
+                  transform="rotate(-90 20 20)"
+                  style={{ transition: "stroke-dashoffset 0.95s linear" }}
+                />
+                <line x1="14" y1="14" x2="26" y2="26" stroke="rgba(120,120,120,0.45)" strokeWidth="2.2" strokeLinecap="round" />
+                <line x1="26" y1="14" x2="14" y2="26" stroke="rgba(120,120,120,0.45)" strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
+              <span className="text-[9px] font-mono font-bold text-black/30 dark:text-white/30">
+                {adStatus === "loading" ? "…" : `${secondsLeft}s`}
+              </span>
+            </div>
           ) : (
-            <div id="adp-banner-slot" className="adp-slot"
-              style={{ width: ad.width, height: ad.height }} />
+            <button 
+              onClick={closeWithReward}
+              className="w-[30px] h-[30px] rounded-full flex items-center justify-center bg-red-500/10 dark:bg-red-500/15 border border-red-500/40 dark:border-red-500/50 text-red-600 dark:text-red-400 hover:bg-red-500/20 dark:hover:bg-red-500/30 hover:scale-110 active:scale-95 transition-all"
+              aria-label="Close"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
           )}
+        </div>
 
-          {/* loading shimmer shown while detecting */}
-          {adStatus === "loading" && (
-            <div className="adp-shimmer-label">Loading ad…</div>
-          )}
+        {/* Header */}
+        <div className="flex flex-col items-center gap-1 mt-2">
+          <span className="text-[8.5px] font-mono font-extrabold tracking-[0.16em] text-black/30 dark:text-yellow-500/50">
+            ● SPONSORED
+          </span>
+          <p className="text-[15px] font-bold tracking-tight m-0">
+            {isNative ? "Recommended" : "Featured Ad"}
+          </p>
+        </div>
 
-          {/* ── status ── */}
-          <div className={`adp-status ${canClose ? "adp-status--done" : ""}`}>
-            <span className={`adp-dot ${canClose ? "adp-dot--green" : ""}`} />
-            {canClose
-              ? "Reward ready — tap to close"
-              : adStatus === "loading"
-                ? "Loading ad…"
-                : `Available in ${secondsLeft}s`}
+        {/* Ad Slot */}
+        {isNative ? (
+          <div id="adp-native-slot" className="w-full min-h-[250px] rounded-xl overflow-hidden bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10" />
+        ) : (
+          <div 
+            id="adp-banner-slot" 
+            className="rounded-xl overflow-hidden bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10"
+            style={{ width: ad.width, height: ad.height }} 
+          />
+        )}
+
+        {/* Loading indicator */}
+        {adStatus === "loading" && (
+          <div className="text-[11px] font-mono font-semibold text-black/30 dark:text-white/30 animate-pulse">
+            Loading ad…
           </div>
+        )}
 
+        {/* Status */}
+        <div className={`flex items-center gap-2 text-[11px] font-semibold px-4 py-1.5 rounded-full transition-all border ${
+          canClose 
+            ? "bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400" 
+            : "bg-black/5 dark:bg-white/5 border-transparent text-black/40 dark:text-white/35"
+        }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${
+            canClose 
+              ? "bg-green-400 shadow-[0_0_6px_#4ade80]" 
+              : "bg-yellow-400 animate-pulse shadow-[0_0_6px_#facc15]"
+          }`} />
+          {canClose
+            ? "Reward ready — tap to close"
+            : adStatus === "loading"
+              ? "Loading ad…"
+              : `Available in ${secondsLeft}s`}
         </div>
       </div>
-    </>,
+    </div>,
     document.body
   );
 }
-
-/* ═══════════════════════════════════════════════════════════
-   CSS
-═══════════════════════════════════════════════════════════ */
-const CSS = `
-  @keyframes adp-in  { from{opacity:0} to{opacity:1} }
-  @keyframes adp-pop {
-    from { opacity:0; transform:translateY(24px) scale(0.93) }
-    to   { opacity:1; transform:translateY(0)    scale(1)    }
-  }
-  @keyframes adp-unlock {
-    0%   { transform:scale(0.3) rotate(-20deg); opacity:0 }
-    65%  { transform:scale(1.15) rotate(3deg);  opacity:1 }
-    100% { transform:scale(1)    rotate(0);     opacity:1 }
-  }
-  @keyframes adp-pulse  { 0%,100%{opacity:1} 50%{opacity:0.2} }
-  @keyframes adp-shimmer{
-    0%  { background-position: -400px 0 }
-    100%{ background-position:  400px 0 }
-  }
-
-  /* overlay */
-  .adp-overlay {
-    position:fixed; inset:0; z-index:9999;
-    display:flex; align-items:center; justify-content:center;
-    animation:adp-in 0.2s ease;
-    background:rgba(0,0,0,0.6);
-    backdrop-filter:blur(6px) saturate(0.8);
-  }
-  @media(prefers-color-scheme:dark){ .adp-overlay{background:rgba(0,0,8,0.8);} }
-  .dark .adp-overlay{background:rgba(0,0,8,0.8);}
-
-  /* card */
-  .adp-popup {
-    position:relative;
-    border-radius:20px;
-    padding:22px 22px 18px;
-    display:flex; flex-direction:column; align-items:center; gap:16px;
-    animation:adp-pop 0.36s cubic-bezier(0.22,1,0.36,1);
-    background:#ffffff;
-    border:1px solid rgba(0,0,0,0.08);
-    box-shadow:
-      0 2px 4px rgba(0,0,0,0.04),
-      0 8px 24px rgba(0,0,0,0.08),
-      0 24px 64px rgba(0,0,0,0.12);
-    color:#111827;
-  }
-  @media(prefers-color-scheme:dark){
-    .adp-popup{
-      background:linear-gradient(155deg,#111827 0%,#1e1b4b 100%);
-      border:1px solid rgba(255,255,255,0.07);
-      box-shadow:0 0 0 1px rgba(99,102,241,0.2),0 8px 32px rgba(0,0,0,0.5),0 32px 80px rgba(0,0,0,0.7);
-      color:#f1f5f9;
-    }
-  }
-  .dark .adp-popup{
-    background:linear-gradient(155deg,#111827 0%,#1e1b4b 100%);
-    border:1px solid rgba(255,255,255,0.07);
-    box-shadow:0 0 0 1px rgba(99,102,241,0.2),0 8px 32px rgba(0,0,0,0.5),0 32px 80px rgba(0,0,0,0.7);
-    color:#f1f5f9;
-  }
-
-  /* ── FAILED POPUP ── */
-  .adp-popup--failed {
-    gap:12px;
-    text-align:center;
-  }
-  .adp-fail-icon {
-    margin-top:8px;
-    color:#ef4444;
-    opacity:0.85;
-  }
-  .adp-fail-title {
-    margin:0;
-    font-size:17px; font-weight:800; letter-spacing:-0.02em;
-    font-family:system-ui,-apple-system,sans-serif;
-    color:#dc2626;
-  }
-  @media(prefers-color-scheme:dark){ .adp-fail-title{color:#fca5a5;} }
-  .dark .adp-fail-title{color:#fca5a5;}
-
-  .adp-fail-sub {
-    margin:0;
-    font-size:13px; line-height:1.55;
-    font-family:system-ui,-apple-system,sans-serif;
-    color:rgba(0,0,0,0.55);
-    max-width:270px;
-  }
-  @media(prefers-color-scheme:dark){ .adp-fail-sub{color:rgba(255,255,255,0.5);} }
-  .dark .adp-fail-sub{color:rgba(255,255,255,0.5);}
-  .adp-fail-sub strong{ color:inherit; font-weight:700; }
-
-  .adp-fail-hint {
-    display:flex; align-items:center; gap:6px;
-    font-size:11px; font-weight:600;
-    font-family:system-ui,-apple-system,sans-serif;
-    padding:7px 14px; border-radius:99px;
-    background:rgba(239,68,68,0.07);
-    border:1px solid rgba(239,68,68,0.18);
-    color:#b91c1c;
-  }
-  @media(prefers-color-scheme:dark){
-    .adp-fail-hint{ background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.25); color:#fca5a5; }
-  }
-  .dark .adp-fail-hint{ background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.25); color:#fca5a5; }
-
-  .adp-fail-btn {
-    margin-top:4px; margin-bottom:4px;
-    padding:10px 36px; border-radius:12px;
-    font-size:14px; font-weight:700;
-    font-family:system-ui,-apple-system,sans-serif;
-    cursor:pointer;
-    transition:background 0.18s, transform 0.12s;
-    background:rgba(0,0,0,0.07);
-    border:1.5px solid rgba(0,0,0,0.12);
-    color:#374151;
-  }
-  .adp-fail-btn:hover{ background:rgba(0,0,0,0.13); transform:scale(1.03); }
-  .adp-fail-btn:active{ transform:scale(0.96); }
-  @media(prefers-color-scheme:dark){
-    .adp-fail-btn{ background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.12); color:#e2e8f0; }
-    .adp-fail-btn:hover{ background:rgba(255,255,255,0.14); }
-  }
-  .dark .adp-fail-btn{ background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.12); color:#e2e8f0; }
-  .dark .adp-fail-btn:hover{ background:rgba(255,255,255,0.14); }
-
-  /* close area */
-  .adp-close-wrap {
-    position:absolute; top:12px; right:12px;
-    display:flex; flex-direction:column; align-items:center; gap:2px;
-  }
-
-  /* locked ring */
-  .adp-ring {
-    display:flex; flex-direction:column; align-items:center; gap:2px;
-    cursor:not-allowed; user-select:none;
-  }
-  .adp-ring-label {
-    font-size:9px; font-weight:700; font-family:monospace; letter-spacing:0.03em;
-    color:rgba(0,0,0,0.3);
-  }
-  @media(prefers-color-scheme:dark){ .adp-ring-label{color:rgba(255,255,255,0.3);} }
-  .dark .adp-ring-label{color:rgba(255,255,255,0.3);}
-
-  /* unlocked button */
-  .adp-close-btn {
-    width:30px; height:30px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-    animation:adp-unlock 0.38s cubic-bezier(0.22,1,0.36,1) forwards;
-    transition:background 0.18s, transform 0.12s, box-shadow 0.18s;
-    background:rgba(239,68,68,0.08);
-    border:1.5px solid rgba(239,68,68,0.35);
-    color:#dc2626;
-    box-shadow:0 0 0 0 rgba(239,68,68,0);
-  }
-  .adp-close-btn:hover{
-    background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.7);
-    transform:scale(1.08); box-shadow:0 0 12px rgba(239,68,68,0.2);
-  }
-  .adp-close-btn:active{ transform:scale(0.94); }
-  @media(prefers-color-scheme:dark){
-    .adp-close-btn{ background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.4); color:#fca5a5; }
-    .adp-close-btn:hover{ background:rgba(239,68,68,0.28); border-color:rgba(239,68,68,0.7); box-shadow:0 0 16px rgba(239,68,68,0.25); }
-  }
-  .dark .adp-close-btn{ background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.4); color:#fca5a5; }
-  .dark .adp-close-btn:hover{ background:rgba(239,68,68,0.28); border-color:rgba(239,68,68,0.7); box-shadow:0 0 16px rgba(239,68,68,0.25); }
-
-  /* header */
-  .adp-header{ display:flex; flex-direction:column; align-items:center; gap:3px; margin-top:8px; }
-  .adp-badge{
-    font-size:8.5px; font-weight:800; letter-spacing:0.16em; font-family:monospace;
-    color:rgba(0,0,0,0.3);
-  }
-  @media(prefers-color-scheme:dark){ .adp-badge{color:rgba(250,204,21,0.5);} }
-  .dark .adp-badge{color:rgba(250,204,21,0.5);}
-  .adp-title{
-    margin:0; font-size:15px; font-weight:700;
-    font-family:system-ui,-apple-system,sans-serif; letter-spacing:-0.02em;
-  }
-
-  /* ad slots */
-  .adp-slot {
-    border-radius:12px; overflow:hidden;
-    background:rgba(0,0,0,0.04);
-    border:1px solid rgba(0,0,0,0.06);
-  }
-  .adp-slot--native { width:100%; min-height:250px; }
-  @media(prefers-color-scheme:dark){
-    .adp-slot{ background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.06); }
-  }
-  .dark .adp-slot{ background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.06); }
-
-  /* shimmer label */
-  .adp-shimmer-label {
-    font-size:11px; font-weight:600; font-family:monospace;
-    color:rgba(0,0,0,0.3); letter-spacing:0.04em;
-    animation:adp-pulse 1.4s ease-in-out infinite;
-  }
-  @media(prefers-color-scheme:dark){ .adp-shimmer-label{color:rgba(255,255,255,0.25);} }
-  .dark .adp-shimmer-label{color:rgba(255,255,255,0.25);}
-
-  /* status bar */
-  .adp-status {
-    display:flex; align-items:center; gap:8px;
-    font-size:11px; font-weight:600; letter-spacing:0.01em;
-    font-family:system-ui,-apple-system,sans-serif;
-    padding:7px 16px; border-radius:99px;
-    transition:background 0.4s, color 0.4s, border-color 0.4s;
-    border:1px solid transparent;
-    background:rgba(0,0,0,0.05); color:rgba(0,0,0,0.4);
-  }
-  .adp-status--done{
-    background:rgba(22,163,74,0.08); border-color:rgba(22,163,74,0.2); color:#15803d;
-  }
-  @media(prefers-color-scheme:dark){
-    .adp-status{ background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.35); }
-    .adp-status--done{ background:rgba(74,222,128,0.1); border-color:rgba(74,222,128,0.2); color:#4ade80; }
-  }
-  .dark .adp-status{ background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.35); }
-  .dark .adp-status--done{ background:rgba(74,222,128,0.1); border-color:rgba(74,222,128,0.2); color:#4ade80; }
-
-  .adp-dot{
-    width:6px; height:6px; border-radius:50%; flex-shrink:0;
-    background:#facc15; animation:adp-pulse 1.5s ease-in-out infinite;
-    box-shadow:0 0 6px rgba(250,204,21,0.5);
-  }
-  .adp-dot--green{ background:#4ade80; animation:none; box-shadow:0 0 6px rgba(74,222,128,0.5); }
-`;
