@@ -51,7 +51,9 @@ export default function HomePage() {
   const addUID = () => {
     if (uids.length < 4) setUids([...uids, ""]);
   };
-
+  const isDesktop = () => {
+    return typeof window !== "undefined" && window.innerWidth >= 768;
+  };
   const updateUID = (index: number, value: string) => {
     const updated = [...uids];
     updated[index] = value;
@@ -223,7 +225,7 @@ export default function HomePage() {
       const otp = await generateOTP();
       const res = await fetch("/api/send-emote", {
         method: "POST",
-        headers: { "Content-Type": "application/json","x-otp": otp },
+        headers: { "Content-Type": "application/json", "x-otp": otp },
         body: JSON.stringify(payload),
       });
 
@@ -263,10 +265,10 @@ export default function HomePage() {
     try {
       const otp = await generateOTP();
       const res = await fetch(
-        `/api/load-emote?offset=${emotes.length}&limit=1000`,{
-          method: "GET",
-          headers: { "Content-Type": "application/json", "x-otp": otp },
-        }
+        `/api/load-emote?offset=${emotes.length}&limit=1000`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json", "x-otp": otp },
+      }
       );
       const data = await res.json();
       setEmotes(data.emotes);
@@ -722,7 +724,19 @@ export default function HomePage() {
 
 
 
-        <div className="m-auto flex justify-center items-center"> <AdBanner type="banner728x90" /></div>
+        <div className="m-auto flex justify-center items-center w-full overflow-hidden">
+
+          {isDesktop() ? (
+            <AdBanner type="banner728x90" />
+
+          ) : (
+            <AdBanner type="banner468x60" />
+
+          )}
+
+
+
+        </div>
 
         {/* SEARCH SECTION */}
         <div className="bg-zinc-900/80 mt-8 backdrop-blur-sm p-6 rounded-2xl border border-zinc-700 mb-8 slide-in">
