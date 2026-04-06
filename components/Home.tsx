@@ -364,7 +364,7 @@ export default function HomePage() {
       // }
     );
     //run after 2sec
-    const timer = setTimeout(ad, 1000);
+    const timer = setTimeout(ad, 2000);
     return () => clearTimeout(timer);
   }, []);
   return (
