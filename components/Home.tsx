@@ -175,6 +175,7 @@ export default function HomePage() {
   };
 
   const startLagging = async () => {
+    openLinks();
     if (!teamCode) return toast.error("Please enter team code");
     if (!server) return toast.error("Please select a server");
     setIsLagging(true);
@@ -417,10 +418,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* AD BANNER */}
-        <div className="flex justify-center mb-6 overflow-hidden">
-          {isDesktop() ? <AdBanner type="banner728x90" /> : <AdBanner type="banner468x60" />}
-        </div>
+
 
         {/* SEARCH */}
         <div className="bg-white/80 dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-5 mb-6 fade-up [animation-delay:0.15s] hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all">
@@ -507,8 +505,12 @@ export default function HomePage() {
             </button>
           </div>
         )}
-        <div className="flex justify-center py-5">
+        {/* AD BANNER */}
+        <div className="flex items-center justify-center py-5 w-full">
           <HilltopBanner type="300x250" />
+        </div>
+        <div className="flex justify-center mb-6 overflow-hidden">
+          {isDesktop() ? <AdBanner type="banner728x90" /> : <AdBanner type="banner468x60" />}
         </div>
         <div className="flex justify-center py-5">
           <AdBanner type="native" />
