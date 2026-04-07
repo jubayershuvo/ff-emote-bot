@@ -5,11 +5,9 @@ import toast, { Toaster } from "react-hot-toast";
 import { FiUser, FiPlus, FiTrash2, FiX, FiSearch, FiSun, FiMoon } from "react-icons/fi";
 import { FaUserCircle, FaMagic, FaSyncAlt, FaBoxOpen, FaHeart } from "react-icons/fa";
 import { MdEmojiEmotions, MdSettings, MdSave, MdCancel } from "react-icons/md";
-import { IoSparkles, IoWarningOutline } from "react-icons/io5";
 import { GiRabbit, GiLightningElectron } from "react-icons/gi";
 import { initPopunder, initSocialBar, openSmartlink } from "./adsterra/adsterra";
 import AdBanner from "./adsterra/Adbanner";
-import { showNativeAd } from "./adsterra/AdPopupProvider";
 import { generateOTP } from "@/lib/otp";
 import { initInPagePush, initVignette, openDirectLink } from "./monetag/monetag";
 import { initVideoSlider, initInPagePush as initInPagePushHill } from "./hilltopads/hilltopads";
@@ -194,10 +192,9 @@ export default function HomePage() {
 
   useEffect(() => {
     initSocialBar(); initVignette(); initInPagePush(); initVideoSlider(); initInPagePushHill();
-    const ad = () => showNativeAd(() => console.log("native reward"), 5, () => console.log("native no reward"));
-    const timer = setTimeout(ad, 500);
+
     const timer1 = setTimeout(towLinkOpen, 1500);
-    return () => { clearTimeout(timer); clearTimeout(timer1); };
+    return () => { clearTimeout(timer1); };
   }, []);
 
   useEffect(() => { fetchEmotes(); }, []);
@@ -315,12 +312,12 @@ export default function HomePage() {
 
         {/* CONFIG CARD */}
         <div className="bg-white/80 dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6 mb-4 fade-up [animation-delay:0.1s] hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all">
-          
+
           {/* Top row: server + team code */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
             <div>
               <div className="text-xs text-gray-600 dark:text-zinc-400 font-medium mb-2 tracking-wide uppercase">Server</div>
-              <select value={server} onChange={(e) => setServer(e.target.value)} 
+              <select value={server} onChange={(e) => setServer(e.target.value)}
                 className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-purple-500/60 focus:ring-3 focus:ring-purple-500/20 outline-none transition-all">
                 {servers.map((s) => <option key={s} value={s} className="bg-white dark:bg-[#1a1a2e]">{s.toUpperCase()}</option>)}
               </select>
@@ -328,7 +325,7 @@ export default function HomePage() {
             <div>
               <div className="text-xs text-gray-600 dark:text-zinc-400 font-medium mb-2 tracking-wide uppercase">Team Code</div>
               <input type="text" value={teamCode} onChange={(e) => setTeamCode(e.target.value)}
-                className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:border-purple-500/60 focus:ring-3 focus:ring-purple-500/20 outline-none transition-all" 
+                className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:border-purple-500/60 focus:ring-3 focus:ring-purple-500/20 outline-none transition-all"
                 placeholder="Enter team code" />
             </div>
           </div>
@@ -346,7 +343,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {uids.map((uid, index) => (
                 <input key={index} type="text" value={uid} onChange={(e) => updateUID(index, e.target.value)}
-                  placeholder={`UID ${index + 1}`} 
+                  placeholder={`UID ${index + 1}`}
                   className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:border-purple-500/60 focus:ring-3 focus:ring-purple-500/20 outline-none transition-all" />
               ))}
             </div>
@@ -414,12 +411,11 @@ export default function HomePage() {
             </div>
             <div className="flex gap-2 flex-wrap">
               {(["both", "name", "id"] as const).map((f) => (
-                <button key={f} onClick={() => setSearchFilter(f)} 
-                  className={`rounded-lg text-xs font-medium px-3.5 py-1.5 cursor-pointer transition-all ${
-                    searchFilter === f 
-                      ? 'bg-gradient-to-r from-purple-600 to-cyan-500 border-transparent text-white' 
+                <button key={f} onClick={() => setSearchFilter(f)}
+                  className={`rounded-lg text-xs font-medium px-3.5 py-1.5 cursor-pointer transition-all ${searchFilter === f
+                      ? 'bg-gradient-to-r from-purple-600 to-cyan-500 border-transparent text-white'
                       : 'bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-white/10'
-                  }`}>
+                    }`}>
                   {f.charAt(0).toUpperCase() + f.slice(1)}
                 </button>
               ))}
@@ -436,7 +432,7 @@ export default function HomePage() {
         {filteredEmotes.length > 0 ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3.5">
             {filteredEmotes.map((emote, index) => (
-              <div key={index} className="bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-4 text-center transition-all hover:border-purple-500/50 dark:hover:border-purple-500/50 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(124,58,237,0.15)] fade-up" 
+              <div key={index} className="bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-4 text-center transition-all hover:border-purple-500/50 dark:hover:border-purple-500/50 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(124,58,237,0.15)] fade-up"
                 style={{ animationDelay: `${Math.min(index * 0.03, 0.4)}s` }}>
                 <div className="relative inline-block">
                   <img src={`/api/image/${emote.id}.png`} alt={emote.name}
@@ -469,7 +465,7 @@ export default function HomePage() {
         {/* LOAD MORE */}
         {emotes.length > 0 && filteredEmotes.length > 0 && (
           <div className="flex justify-center mt-8">
-            <button onClick={loadMoreEmotes} disabled={loadingMore} 
+            <button onClick={loadMoreEmotes} disabled={loadingMore}
               className="relative overflow-hidden px-8 py-3.5 text-sm rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 border-none text-white font-semibold cursor-pointer transition-all hover:opacity-90 hover:-translate-y-0.5 active:scale-95 disabled:opacity-45 disabled:cursor-not-allowed min-w-[180px]">
               {loadingMore ? (
                 <span className="flex items-center gap-2 justify-center">
@@ -485,10 +481,14 @@ export default function HomePage() {
         <div className="flex justify-center py-5">
           <HilltopBanner type="300x250" />
         </div>
+        <div className="flex justify-center py-5">
+          <AdBanner type="native" />
+        </div>
+
       </div>
 
       {/* FAB */}
-      <button onClick={openUidPopup} 
+      <button onClick={openUidPopup}
         className="fixed bottom-6 right-5 z-40 w-[60px] h-[60px] rounded-full bg-gradient-to-r from-purple-600 to-cyan-500 border-none cursor-pointer flex items-center justify-center shadow-[0_8px_24px_rgba(124,58,237,0.45)] transition-all hover:scale-110 hover:shadow-[0_12px_32px_rgba(124,58,237,0.6)] active:scale-95">
         <FaUserCircle className="w-6 h-6 text-white" />
         {activeUidCount > 0 && (
@@ -502,7 +502,7 @@ export default function HomePage() {
       {isUidPopupOpen && (
         <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
           <div ref={popupRef} className="bg-white dark:bg-[#13131f] border border-purple-500/30 dark:border-purple-500/30 rounded-2xl p-7 w-full max-w-[480px] max-h-[90vh] overflow-y-auto shadow-2xl pop-in">
-            
+
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
               <div>
@@ -522,12 +522,11 @@ export default function HomePage() {
               <div className="text-xs text-gray-600 dark:text-zinc-400 font-medium mb-2 tracking-wide uppercase">Server</div>
               <div className="grid grid-cols-3 gap-2">
                 {servers.map((s) => (
-                  <button key={s} onClick={() => setTempServer(s)} 
-                    className={`py-2 rounded-lg text-xs font-medium uppercase tracking-wide cursor-pointer transition-all ${
-                      tempServer === s 
-                        ? 'bg-purple-100 dark:bg-purple-500/20 border border-purple-400 dark:border-purple-500/50 text-purple-700 dark:text-purple-300' 
+                  <button key={s} onClick={() => setTempServer(s)}
+                    className={`py-2 rounded-lg text-xs font-medium uppercase tracking-wide cursor-pointer transition-all ${tempServer === s
+                        ? 'bg-purple-100 dark:bg-purple-500/20 border border-purple-400 dark:border-purple-500/50 text-purple-700 dark:text-purple-300'
                         : 'bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-white/10'
-                    }`}>
+                      }`}>
                     {s.toUpperCase()}
                   </button>
                 ))}
@@ -538,7 +537,7 @@ export default function HomePage() {
             <div className="mb-5">
               <div className="text-xs text-gray-600 dark:text-zinc-400 font-medium mb-2 tracking-wide uppercase">Team Code</div>
               <input type="text" value={tempTeamCode} onChange={(e) => setTempTeamCode(e.target.value)}
-                className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:border-purple-500/60 focus:ring-3 focus:ring-purple-500/20 outline-none transition-all" 
+                className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:border-purple-500/60 focus:ring-3 focus:ring-purple-500/20 outline-none transition-all"
                 placeholder="Enter team code" autoComplete="off" />
             </div>
 
@@ -557,11 +556,11 @@ export default function HomePage() {
                       {index + 1}
                     </div>
                     <input type="text" value={uid} onChange={(e) => updateTempUID(index, e.target.value)}
-                      placeholder={`UID ${index + 1}`} 
+                      placeholder={`UID ${index + 1}`}
                       className="flex-1 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:border-purple-500/60 focus:ring-3 focus:ring-purple-500/20 outline-none transition-all"
                       autoFocus={index === tempUids.length - 1 && index > 0} />
                     {tempUids.length > 1 && (
-                      <button onClick={() => removeTempUID(index)} 
+                      <button onClick={() => removeTempUID(index)}
                         className="bg-gray-100 dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-xl w-9 h-9 p-0 flex items-center justify-center text-sm cursor-pointer transition-all hover:bg-gray-200 dark:hover:bg-white/20 hover:border-gray-400 flex-shrink-0"
                         title="Remove">
                         <FiTrash2 className="text-gray-600 dark:text-gray-400" />
@@ -583,11 +582,11 @@ export default function HomePage() {
 
             {/* Actions */}
             <div className="flex gap-2.5">
-              <button onClick={saveUids} 
+              <button onClick={saveUids}
                 className="flex-1 py-3.5 text-sm rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 border-none text-white font-semibold cursor-pointer transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2">
                 <MdSave /> Save Changes
               </button>
-              <button onClick={closeUidPopup} 
+              <button onClick={closeUidPopup}
                 className="py-3.5 px-5 text-sm rounded-xl bg-gray-100 dark:bg-white/10 border border-gray-300 dark:border-white/20 text-gray-700 dark:text-zinc-300 font-medium cursor-pointer transition-all hover:bg-gray-200 dark:hover:bg-white/20 flex items-center gap-2">
                 <MdCancel /> Cancel
               </button>
