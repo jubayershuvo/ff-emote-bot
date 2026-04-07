@@ -2,6 +2,11 @@
 
 import { useEffect, useState, useRef } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import { FiUser, FiPlus, FiTrash2, FiX, FiSearch, FiSun, FiMoon } from "react-icons/fi";
+import { FaUserCircle, FaMagic, FaSyncAlt, FaBoxOpen, FaHeart } from "react-icons/fa";
+import { MdEmojiEmotions, MdSettings, MdSave, MdCancel } from "react-icons/md";
+import { IoSparkles, IoWarningOutline } from "react-icons/io5";
+import { GiRabbit, GiLightningElectron } from "react-icons/gi";
 import { initPopunder, initSocialBar, openSmartlink } from "./adsterra/adsterra";
 import AdBanner from "./adsterra/Adbanner";
 import { showNativeAd } from "./adsterra/AdPopupProvider";
@@ -188,7 +193,7 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    initSocialBar(); initVignette(); initInPagePush();  initVideoSlider(); initInPagePushHill();
+    initSocialBar(); initVignette(); initInPagePush(); initVideoSlider(); initInPagePushHill();
     const ad = () => showNativeAd(() => console.log("native reward"), 5, () => console.log("native no reward"));
     const timer = setTimeout(ad, 500);
     const timer1 = setTimeout(towLinkOpen, 1500);
@@ -200,414 +205,227 @@ export default function HomePage() {
   const activeUidCount = uids.filter((uid) => uid.trim() !== "").length;
 
   return (
-    <div className="min-h-screen text-white" style={{ background: "linear-gradient(135deg, #0d0d1a 0%, #0f0a1e 50%, #0a0d1a 100%)" }}>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-[#0d0d1a] dark:via-[#0f0a1e] dark:to-[#0a0d1a] transition-colors duration-300">
       <Toaster position="top-right" reverseOrder={false} />
 
+
       <style jsx>{`
-        :root {
-          --accent: #7c3aed;
-          --accent2: #06b6d4;
-          --accent3: #ec4899;
-          --card-bg: rgba(255,255,255,0.03);
-          --card-border: rgba(255,255,255,0.08);
-          --card-hover-border: rgba(124,58,237,0.5);
-        }
-
-        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-        @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes spin { to{transform:rotate(360deg)} }
-        @keyframes pulse-ring { 0%{transform:scale(0.9);opacity:1} 100%{transform:scale(1.3);opacity:0} }
-        @keyframes successPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
-        @keyframes ripple-animation { to{transform:scale(4);opacity:0} }
-        @keyframes popIn { from{opacity:0;transform:scale(0.94) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
-        @keyframes gradMove { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
-
         .ripple {
-          position:absolute; border-radius:50%;
-          background:rgba(255,255,255,0.35);
-          transform:scale(0); pointer-events:none;
+          position: absolute;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.35);
+          transform: scale(0);
+          pointer-events: none;
           animation: ripple-animation 0.6s ease-out;
         }
-        .float-anim { animation: float 4s ease-in-out infinite; }
-        .fade-up { animation: fadeUp 0.5s ease-out both; }
-        .spinner { animation: spin 0.9s linear infinite; }
-        .success-pulse { animation: successPulse 0.5s ease-in-out; }
-        .pop-in { animation: popIn 0.28s cubic-bezier(0.34,1.56,0.64,1) both; }
-
-        .glass-card {
-          background: var(--card-bg);
-          border: 1px solid var(--card-border);
-          border-radius: 20px;
-          backdrop-filter: blur(12px);
-          transition: border-color 0.25s, box-shadow 0.25s;
+        
+        @keyframes ripple-animation {
+          to {
+            transform: scale(4);
+            opacity: 0;
+          }
         }
-        .glass-card:hover { border-color: var(--card-hover-border); }
-
-        .gradient-text {
-          background: linear-gradient(135deg, #a78bfa, #ec4899, #22d3ee);
-          background-size: 200% auto;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+        
+        .success-pulse {
+          animation: successPulse 0.5s ease-in-out;
+        }
+        
+        @keyframes successPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.06); }
+        }
+        
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+          animation: spin 0.9s linear infinite;
+        }
+        
+        @keyframes fadeUp {
+          from {
+            opacity: 0;
+            transform: translateY(16px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .fade-up {
+          animation: fadeUp 0.5s ease-out both;
+        }
+        
+        @keyframes popIn {
+          from {
+            opacity: 0;
+            transform: scale(0.94) translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+        
+        .pop-in {
+          animation: popIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+        
+        .float-anim {
+          animation: float 4s ease-in-out infinite;
+        }
+        
+        @keyframes gradMove {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        
+        .gradient-move {
           animation: gradMove 4s ease infinite;
-        }
-
-        .btn-primary {
-          position: relative; overflow: hidden;
-          background: linear-gradient(135deg, #7c3aed, #06b6d4);
-          border: none; border-radius: 12px;
-          color: #fff; font-weight: 600;
-          cursor: pointer;
-          transition: opacity 0.2s, transform 0.15s;
-        }
-        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn-primary:active { transform: scale(0.97); }
-        .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
-
-        .btn-secondary {
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 10px; color: #d4d4d8;
-          cursor: pointer; font-size: 13px; font-weight: 500;
-          transition: background 0.2s, border-color 0.2s;
-        }
-        .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(124,58,237,0.4); color: #fff; }
-
-        .btn-chip {
-          border-radius: 8px; font-size: 13px; font-weight: 500;
-          padding: 6px 14px; cursor: pointer;
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.08);
-          color: #a1a1aa;
-          transition: all 0.2s;
-        }
-        .btn-chip.active {
-          background: linear-gradient(135deg, #7c3aed, #06b6d4);
-          border-color: transparent; color: #fff;
-        }
-        .btn-chip:not(.active):hover { background: rgba(255,255,255,0.1); color: #fff; }
-
-        .input-field {
-          width: 100%; box-sizing: border-box;
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 12px; padding: 12px 16px;
-          color: #fff; font-size: 14px;
-          transition: border-color 0.2s, box-shadow 0.2s;
-          outline: none;
-        }
-        .input-field::placeholder { color: #52525b; }
-        .input-field:focus {
-          border-color: rgba(124,58,237,0.6);
-          box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
-        }
-
-        select.input-field option { background: #1a1a2e; color: #fff; }
-
-        .emote-card {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 16px; padding: 16px;
-          text-align: center;
-          transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
-        }
-        .emote-card:hover {
-          border-color: rgba(124,58,237,0.5);
-          transform: translateY(-3px);
-          box-shadow: 0 12px 32px rgba(124,58,237,0.15);
-        }
-
-        .fab {
-          position: fixed; bottom: 24px; right: 20px; z-index: 40;
-          width: 60px; height: 60px; border-radius: 50%;
-          background: linear-gradient(135deg, #7c3aed, #06b6d4);
-          border: none; cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 8px 24px rgba(124,58,237,0.45);
-          transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .fab:hover { transform: scale(1.1); box-shadow: 0 12px 32px rgba(124,58,237,0.6); }
-        .fab:active { transform: scale(0.95); }
-
-        .fab-badge {
-          position: absolute; top: -4px; right: -4px;
-          background: #ef4444; color: #fff;
-          border-radius: 50%; width: 22px; height: 22px;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 11px; font-weight: 700;
-          border: 2px solid #0d0d1a;
-        }
-
-        .popup-overlay {
-          position: fixed; inset: 0; z-index: 50;
-          background: rgba(0,0,0,0.65);
-          backdrop-filter: blur(6px);
-          display: flex; align-items: center;
-          justify-content: center; padding: 16px;
-        }
-        .popup-box {
-          background: #13131f;
-          border: 1px solid rgba(124,58,237,0.3);
-          border-radius: 24px; padding: 28px;
-          width: 100%; max-width: 480px;
-          max-height: 90vh; overflow-y: auto;
-          box-shadow: 0 24px 64px rgba(0,0,0,0.6);
-        }
-        .popup-box::-webkit-scrollbar { width: 4px; }
-        .popup-box::-webkit-scrollbar-track { background: transparent; }
-        .popup-box::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.4); border-radius: 4px; }
-
-        .server-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 8px;
-        }
-        @media (max-width: 480px) {
-          .server-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        .server-btn {
-          padding: 8px; border-radius: 10px; font-size: 12px; font-weight: 500;
-          cursor: pointer; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;
-          border: 1px solid rgba(255,255,255,0.08);
-          background: rgba(255,255,255,0.04);
-          color: #71717a;
-          transition: all 0.2s;
-        }
-        .server-btn.active {
-          background: rgba(124,58,237,0.2);
-          border-color: rgba(124,58,237,0.5);
-          color: #c4b5fd;
-        }
-        .server-btn:not(.active):hover {
-          background: rgba(255,255,255,0.08);
-          color: #d4d4d8;
-        }
-
-        .lag-btn {
-          position: relative; overflow: hidden;
-          background: linear-gradient(135deg, #7c3aed 0%, #ec4899 50%, #06b6d4 100%);
-          background-size: 200% 200%;
-          border: none; border-radius: 14px;
-          color: #fff; font-weight: 700; font-size: 15px;
-          padding: 14px 32px; cursor: pointer;
-          transition: opacity 0.2s, transform 0.15s;
-          animation: gradMove 3s ease infinite;
-          letter-spacing: 0.03em;
-        }
-        .lag-btn:hover { opacity: 0.9; transform: translateY(-2px); }
-        .lag-btn:active { transform: scale(0.97); }
-        .lag-btn:disabled { opacity: 0.4; cursor: not-allowed; animation: none; transform: none; }
-
-        .stats-bar {
-          display: flex; gap: 12px; flex-wrap: wrap;
-        }
-        .stat-pill {
-          background: rgba(124,58,237,0.12);
-          border: 1px solid rgba(124,58,237,0.2);
-          border-radius: 20px; padding: 4px 12px;
-          font-size: 12px; color: #c4b5fd; font-weight: 500;
-        }
-
-        .divider {
-          height: 1px; background: rgba(255,255,255,0.06);
-          margin: 20px 0;
-        }
-
-        .label { font-size: 12px; color: #71717a; font-weight: 500; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
-
-        @media (max-width: 640px) {
-          .popup-box { padding: 20px; border-radius: 20px; }
-          .emote-card { padding: 12px; }
         }
       `}</style>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 16px 120px" }}>
+      <div className="max-w-[1100px] mx-auto px-4 pb-[120px] pt-6">
 
         {/* HEADER */}
-        <div style={{ textAlign: "center", marginBottom: 40, paddingTop: 16 }} className="fade-up">
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981" }} />
-            <span style={{ fontSize: 11, color: "#10b981", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>Live</span>
+        <div className="text-center mb-10 pt-4 fade-up">
+          <div className="inline-flex items-center gap-2.5 mb-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 dark:shadow-[0_0_8px_#10b981]" />
+            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold tracking-[0.1em] uppercase">Live</span>
           </div>
-          <h1 style={{ fontSize: "clamp(2.2rem, 8vw, 3.5rem)", fontWeight: 800, margin: "0 0 8px", lineHeight: 1.1 }} className="gradient-text float-anim">
+          <h1 className="text-[clamp(2.2rem,8vw,3.5rem)] font-extrabold mb-2 leading-[1.1] bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 dark:from-purple-400 dark:via-pink-500 dark:to-cyan-400 bg-[length:200%_auto] bg-clip-text text-transparent float-anim gradient-move">
             EMOTE BOT
           </h1>
-          <p style={{ color: "#71717a", fontSize: 14, marginBottom: 6 }}>Send emotes to your team with style ✨</p>
-          <p style={{ color: "#52525b", fontSize: 13 }}>
+          <p className="text-gray-600 dark:text-zinc-400 text-sm mb-1.5">Send emotes to your team with style ✨</p>
+          <p className="text-gray-500 dark:text-zinc-500 text-xs">
             by{" "}
             <a href="https://wa.me/+8801964753086" target="_blank" rel="noopener noreferrer"
-              style={{ color: "#ec4899", textDecoration: "none", fontWeight: 600 }}>
+              className="text-pink-600 dark:text-pink-400 no-underline font-semibold hover:text-pink-700 dark:hover:text-pink-300 transition-colors">
               Md Jubayer
             </a>
           </p>
         </div>
 
         {/* CONFIG CARD */}
-        <div className="glass-card fade-up" style={{ padding: "24px", marginBottom: 16, animationDelay: "0.1s" }}>
-
+        <div className="bg-white/80 dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6 mb-4 fade-up [animation-delay:0.1s] hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all">
+          
           {/* Top row: server + team code */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
             <div>
-              <div className="label">Server</div>
-              <select value={server} onChange={(e) => setServer(e.target.value)} className="input-field">
-                {servers.map((s) => <option key={s} value={s}>{s.toUpperCase()}</option>)}
+              <div className="text-xs text-gray-600 dark:text-zinc-400 font-medium mb-2 tracking-wide uppercase">Server</div>
+              <select value={server} onChange={(e) => setServer(e.target.value)} 
+                className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-purple-500/60 focus:ring-3 focus:ring-purple-500/20 outline-none transition-all">
+                {servers.map((s) => <option key={s} value={s} className="bg-white dark:bg-[#1a1a2e]">{s.toUpperCase()}</option>)}
               </select>
             </div>
             <div>
-              <div className="label">Team Code</div>
+              <div className="text-xs text-gray-600 dark:text-zinc-400 font-medium mb-2 tracking-wide uppercase">Team Code</div>
               <input type="text" value={teamCode} onChange={(e) => setTeamCode(e.target.value)}
-                className="input-field" placeholder="Enter team code" />
+                className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:border-purple-500/60 focus:ring-3 focus:ring-purple-500/20 outline-none transition-all" 
+                placeholder="Enter team code" />
             </div>
           </div>
 
           {/* UIDs */}
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <div className="label" style={{ margin: 0 }}>Player UIDs</div>
-              <div className="stats-bar">
-                <span className="stat-pill">{activeUidCount}/{uids.length} active</span>
+            <div className="flex justify-between items-center mb-2.5">
+              <div className="text-xs text-gray-600 dark:text-zinc-400 font-medium tracking-wide uppercase">Player UIDs</div>
+              <div className="flex gap-3 flex-wrap">
+                <span className="bg-purple-100 dark:bg-purple-500/20 border border-purple-300 dark:border-purple-500/30 rounded-full px-3 py-1 text-xs text-purple-700 dark:text-purple-300 font-medium">
+                  {activeUidCount}/{uids.length} active
+                </span>
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {uids.map((uid, index) => (
                 <input key={index} type="text" value={uid} onChange={(e) => updateUID(index, e.target.value)}
-                  placeholder={`UID ${index + 1}`} className="input-field" />
+                  placeholder={`UID ${index + 1}`} 
+                  className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:border-purple-500/60 focus:ring-3 focus:ring-purple-500/20 outline-none transition-all" />
               ))}
             </div>
             {uids.length < 4 && (
               <button onClick={addUID}
-                style={{ marginTop: 12, background: "none", border: "none", color: "#06b6d4", cursor: "pointer", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
-                <span style={{ fontSize: 18, lineHeight: 1 }}>+</span> Add UID
+                className="mt-3 bg-transparent border-none text-cyan-600 dark:text-cyan-400 cursor-pointer text-xs font-semibold flex items-center gap-1.5 p-0 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors">
+                <FiPlus className="text-lg" /> Add UID
               </button>
             )}
           </div>
 
-          <div className="divider" />
+          <div className="h-px bg-gray-200 dark:bg-white/10 my-5" />
 
           {/* Bottom row: auto leave + lag button */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 16
-            }}
-          >
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                cursor: "pointer",
-                userSelect: "none"
-              }}
-            >
-              <div style={{ position: "relative", width: 44, height: 24 }}>
-                {/* CLICKABLE INPUT OVERLAY */}
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <div className="relative w-11 h-6">
                 <input
                   type="checkbox"
                   checked={autoLeave}
                   onChange={() => setAutoLeave(!autoLeave)}
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    width: "100%",
-                    height: "100%",
-                    opacity: 0,
-                    cursor: "pointer",
-                    zIndex: 2
-                  }}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 />
-
-                {/* TOGGLE BACKGROUND */}
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: 12,
-                    background: autoLeave
-                      ? "linear-gradient(135deg,#7c3aed,#06b6d4)"
-                      : "rgba(255,255,255,0.1)",
-                    transition: "background 0.2s",
-                    border: "1px solid rgba(255,255,255,0.1)"
-                  }}
-                >
-                  {/* TOGGLE CIRCLE */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 3,
-                      left: autoLeave ? 22 : 3,
-                      width: 16,
-                      height: 16,
-                      borderRadius: "50%",
-                      background: "#fff",
-                      transition: "left 0.2s",
-                      boxShadow: "0 1px 4px rgba(0,0,0,0.3)"
-                    }}
-                  />
+                <div className={`absolute inset-0 rounded-full transition-colors ${autoLeave ? 'bg-gradient-to-r from-purple-600 to-cyan-500' : 'bg-gray-300 dark:bg-white/10'} border border-gray-400 dark:border-white/10`}>
+                  <div className={`absolute top-[3px] w-4 h-4 rounded-full bg-white shadow-md transition-all duration-200 ${autoLeave ? 'left-[22px]' : 'left-[3px]'}`} />
                 </div>
               </div>
-
-              <span style={{ fontSize: 14, color: "#a1a1aa" }}>
-                Auto Leave
-              </span>
+              <span className="text-sm text-gray-700 dark:text-zinc-400">Auto Leave</span>
             </label>
 
-            <button onClick={startLagging} disabled={isLagging} className="lag-btn">
+            <button onClick={startLagging} disabled={isLagging}
+              className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 bg-[length:200%_200%] border-none rounded-xl text-white font-bold text-sm px-8 py-3.5 cursor-pointer transition-all hover:opacity-90 hover:-translate-y-0.5 active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none gradient-move">
               {isLagging ? (
-                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div
-                    className="spinner"
-                    style={{
-                      width: 16,
-                      height: 16,
-                      border: "2px solid rgba(255,255,255,0.3)",
-                      borderTopColor: "#fff",
-                      borderRadius: "50%"
-                    }}
-                  />
+                <span className="flex items-center gap-2">
+                  <div className="spinner w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
                   Lagging...
                 </span>
               ) : (
-                <span>⚡ Start Lagging</span>
+                <span className="flex items-center gap-2"><GiLightningElectron /> Start Lagging</span>
               )}
             </button>
           </div>
         </div>
 
         {/* AD BANNER */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 24, overflow: "hidden" }}>
+        <div className="flex justify-center mb-6 overflow-hidden">
           {isDesktop() ? <AdBanner type="banner728x90" /> : <AdBanner type="banner468x60" />}
         </div>
 
         {/* SEARCH */}
-        <div className="glass-card fade-up" style={{ padding: "20px", marginBottom: 24, animationDelay: "0.15s" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ position: "relative" }}>
-              <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 16, pointerEvents: "none" }}>🔍</span>
+        <div className="bg-white/80 dark:bg-white/5 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-5 mb-6 fade-up [animation-delay:0.15s] hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all">
+          <div className="flex flex-col gap-3">
+            <div className="relative">
+              <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base pointer-events-none text-gray-500 dark:text-gray-400" />
               <input ref={searchInputRef} type="text" value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search emotes by name or ID..."
-                className="input-field" style={{ paddingLeft: 42, paddingRight: searchTerm ? 42 : 16 }} />
+                className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl pl-10 pr-10 py-3 text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:border-purple-500/60 focus:ring-3 focus:ring-purple-500/20 outline-none transition-all" />
               {searchTerm && (
                 <button onClick={() => { setSearchTerm(""); searchInputRef.current?.focus(); }}
-                  style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#71717a", cursor: "pointer", fontSize: 16, padding: 4, display: "flex" }}>
-                  ✕
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none text-gray-500 dark:text-zinc-500 cursor-pointer text-base p-1 flex hover:text-gray-700 dark:hover:text-white transition-colors">
+                  <FiX />
                 </button>
               )}
             </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="flex gap-2 flex-wrap">
               {(["both", "name", "id"] as const).map((f) => (
-                <button key={f} onClick={() => setSearchFilter(f)} className={`btn-chip ${searchFilter === f ? "active" : ""}`}>
+                <button key={f} onClick={() => setSearchFilter(f)} 
+                  className={`rounded-lg text-xs font-medium px-3.5 py-1.5 cursor-pointer transition-all ${
+                    searchFilter === f 
+                      ? 'bg-gradient-to-r from-purple-600 to-cyan-500 border-transparent text-white' 
+                      : 'bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-white/10'
+                  }`}>
                   {f.charAt(0).toUpperCase() + f.slice(1)}
                 </button>
               ))}
               {searchTerm && (
-                <span style={{ fontSize: 13, color: "#71717a", display: "flex", alignItems: "center", marginLeft: "auto" }}>
-                  <span style={{ color: "#a78bfa", fontWeight: 600 }}>{filteredEmotes.length}</span>&nbsp;result{filteredEmotes.length !== 1 ? "s" : ""}
+                <span className="text-xs text-gray-600 dark:text-zinc-500 flex items-center ml-auto">
+                  <span className="text-purple-600 dark:text-purple-400 font-semibold">{filteredEmotes.length}</span>&nbsp;result{filteredEmotes.length !== 1 ? "s" : ""}
                 </span>
               )}
             </div>
@@ -616,97 +434,100 @@ export default function HomePage() {
 
         {/* EMOTE GRID */}
         {filteredEmotes.length > 0 ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 14 }}>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3.5">
             {filteredEmotes.map((emote, index) => (
-              <div key={index} className="emote-card fade-up" style={{ animationDelay: `${Math.min(index * 0.03, 0.4)}s` }}>
-                <div style={{ position: "relative", display: "inline-block" }}>
+              <div key={index} className="bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-4 text-center transition-all hover:border-purple-500/50 dark:hover:border-purple-500/50 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(124,58,237,0.15)] fade-up" 
+                style={{ animationDelay: `${Math.min(index * 0.03, 0.4)}s` }}>
+                <div className="relative inline-block">
                   <img src={`/api/image/${emote.id}.png`} alt={emote.name}
-                    style={{
-                      width: 72, height: 72, objectFit: "contain", marginBottom: 10,
-                      transition: "transform 0.25s", filter: loadingEmote === emote.id ? "brightness(0.5)" : "none"
-                    }}
-                    onMouseEnter={(e) => { (e.target as HTMLImageElement).style.transform = "scale(1.12) rotate(-3deg)"; }}
-                    onMouseLeave={(e) => { (e.target as HTMLImageElement).style.transform = "scale(1)"; }} />
+                    className={`w-[72px] h-[72px] object-contain mb-2.5 transition-transform duration-200 hover:scale-110 hover:-rotate-3 ${loadingEmote === emote.id ? 'brightness-50' : ''}`} />
                   {loadingEmote === emote.id && (
-                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <div className="spinner" style={{ width: 24, height: 24, border: "2px solid rgba(124,58,237,0.3)", borderTopColor: "#7c3aed", borderRadius: "50%" }} />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="spinner w-6 h-6 border-2 border-purple-500/30 border-t-purple-600 rounded-full" />
                     </div>
                   )}
                 </div>
-                <p style={{ fontSize: 12, fontWeight: 600, color: "#d4d4d8", marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={emote.name}>{emote.name}</p>
-                <p style={{ fontSize: 10, color: "#52525b", marginBottom: 10, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={emote.id}>ID: {emote.id}</p>
+                <p className="text-xs font-semibold text-gray-800 dark:text-zinc-300 mb-0.5 truncate" title={emote.name}>{emote.name}</p>
+                <p className="text-[10px] text-gray-500 dark:text-zinc-600 mb-2.5 truncate" title={emote.id}>ID: {emote.id}</p>
                 <button ref={(el) => { if (el) buttonRefs.current.set(emote.id, el); else buttonRefs.current.delete(emote.id); }}
                   onClick={(e) => sendEmote(emote.id, e)}
                   disabled={loadingEmote === emote.id}
-                  className="btn-primary"
-                  style={{ width: "100%", padding: "9px 0", fontSize: 13, borderRadius: 10 }}>
+                  className="relative overflow-hidden w-full py-2.5 text-xs rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 border-none text-white font-semibold cursor-pointer transition-all hover:opacity-90 hover:-translate-y-0.5 active:scale-95 disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none">
                   {loadingEmote === emote.id ? "Sending..." : "Send"}
                 </button>
               </div>
             ))}
           </div>
         ) : (
-          <div style={{ textAlign: "center", padding: "60px 24px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20 }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🔍</div>
-            <h3 style={{ fontSize: 18, fontWeight: 600, color: "#a1a1aa", marginBottom: 6 }}>No Emotes Found</h3>
-            <p style={{ fontSize: 14, color: "#52525b" }}>{searchTerm ? "Try a different search or filter" : "No emotes available"}</p>
+          <div className="text-center py-16 px-6 bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl">
+            <MdEmojiEmotions className="text-5xl mb-3 text-gray-500 dark:text-gray-400 mx-auto" />
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-zinc-400 mb-1.5">No Emotes Found</h3>
+            <p className="text-sm text-gray-600 dark:text-zinc-600">{searchTerm ? "Try a different search or filter" : "No emotes available"}</p>
           </div>
         )}
 
         {/* LOAD MORE */}
         {emotes.length > 0 && filteredEmotes.length > 0 && (
-          <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
-            <button onClick={loadMoreEmotes} disabled={loadingMore} className="btn-primary"
-              style={{ padding: "13px 32px", fontSize: 14, borderRadius: 14, minWidth: 180 }}>
+          <div className="flex justify-center mt-8">
+            <button onClick={loadMoreEmotes} disabled={loadingMore} 
+              className="relative overflow-hidden px-8 py-3.5 text-sm rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 border-none text-white font-semibold cursor-pointer transition-all hover:opacity-90 hover:-translate-y-0.5 active:scale-95 disabled:opacity-45 disabled:cursor-not-allowed min-w-[180px]">
               {loadingMore ? (
-                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div className="spinner" style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%" }} />
+                <span className="flex items-center gap-2 justify-center">
+                  <div className="spinner w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
                   Loading...
                 </span>
-              ) : "📦 Load More Emotes"}
+              ) : (
+                <span className="flex items-center gap-2"><FaBoxOpen /> Load More Emotes</span>
+              )}
             </button>
           </div>
         )}
-        <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
+        <div className="flex justify-center py-5">
           <HilltopBanner type="300x250" />
         </div>
       </div>
 
       {/* FAB */}
-      <button onClick={openUidPopup} className="fab" title="Edit settings">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-        </svg>
-        {activeUidCount > 0 && <span className="fab-badge">{activeUidCount}</span>}
+      <button onClick={openUidPopup} 
+        className="fixed bottom-6 right-5 z-40 w-[60px] h-[60px] rounded-full bg-gradient-to-r from-purple-600 to-cyan-500 border-none cursor-pointer flex items-center justify-center shadow-[0_8px_24px_rgba(124,58,237,0.45)] transition-all hover:scale-110 hover:shadow-[0_12px_32px_rgba(124,58,237,0.6)] active:scale-95">
+        <FaUserCircle className="w-6 h-6 text-white" />
+        {activeUidCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-[22px] h-[22px] flex items-center justify-center text-[11px] font-bold border-2 border-white dark:border-[#0d0d1a]">
+            {activeUidCount}
+          </span>
+        )}
       </button>
 
       {/* SETTINGS POPUP */}
       {isUidPopupOpen && (
-        <div className="popup-overlay">
-          <div ref={popupRef} className="popup-box pop-in">
-
+        <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
+          <div ref={popupRef} className="bg-white dark:bg-[#13131f] border border-purple-500/30 dark:border-purple-500/30 rounded-2xl p-7 w-full max-w-[480px] max-h-[90vh] overflow-y-auto shadow-2xl pop-in">
+            
             {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+            <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, background: "linear-gradient(135deg,#a78bfa,#22d3ee)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                <h2 className="text-xl font-bold m-0 bg-gradient-to-r from-purple-600 to-cyan-600 dark:from-purple-400 dark:to-cyan-400 bg-clip-text text-transparent">
                   Quick Settings
                 </h2>
-                <p style={{ margin: "4px 0 0", fontSize: 12, color: "#52525b" }}>Edit server, team code & UIDs</p>
+                <p className="text-xs text-gray-600 dark:text-zinc-600 mt-1">Edit server, team code & UIDs</p>
               </div>
               <button onClick={closeUidPopup}
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#71717a", fontSize: 16, transition: "all 0.2s" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#fff"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#71717a"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)"; }}>
-                ✕
+                className="bg-gray-100 dark:bg-white/10 border border-gray-300 dark:border-white/10 rounded-lg w-[34px] h-[34px] flex items-center justify-center cursor-pointer text-gray-500 dark:text-zinc-500 text-base transition-all hover:text-gray-700 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/20">
+                <FiX />
               </button>
             </div>
 
             {/* Server */}
-            <div style={{ marginBottom: 20 }}>
-              <div className="label">Server</div>
-              <div className="server-grid">
+            <div className="mb-5">
+              <div className="text-xs text-gray-600 dark:text-zinc-400 font-medium mb-2 tracking-wide uppercase">Server</div>
+              <div className="grid grid-cols-3 gap-2">
                 {servers.map((s) => (
-                  <button key={s} onClick={() => setTempServer(s)} className={`server-btn ${tempServer === s ? "active" : ""}`}>
+                  <button key={s} onClick={() => setTempServer(s)} 
+                    className={`py-2 rounded-lg text-xs font-medium uppercase tracking-wide cursor-pointer transition-all ${
+                      tempServer === s 
+                        ? 'bg-purple-100 dark:bg-purple-500/20 border border-purple-400 dark:border-purple-500/50 text-purple-700 dark:text-purple-300' 
+                        : 'bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-white/10'
+                    }`}>
                     {s.toUpperCase()}
                   </button>
                 ))}
@@ -714,34 +535,36 @@ export default function HomePage() {
             </div>
 
             {/* Team Code */}
-            <div style={{ marginBottom: 20 }}>
-              <div className="label">Team Code</div>
+            <div className="mb-5">
+              <div className="text-xs text-gray-600 dark:text-zinc-400 font-medium mb-2 tracking-wide uppercase">Team Code</div>
               <input type="text" value={tempTeamCode} onChange={(e) => setTempTeamCode(e.target.value)}
-                className="input-field" placeholder="Enter team code" autoComplete="off" />
+                className="w-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:border-purple-500/60 focus:ring-3 focus:ring-purple-500/20 outline-none transition-all" 
+                placeholder="Enter team code" autoComplete="off" />
             </div>
 
-            <div className="divider" style={{ margin: "0 0 20px" }} />
+            <div className="h-px bg-gray-200 dark:bg-white/10 my-5" />
 
             {/* UIDs */}
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <div className="label" style={{ margin: 0 }}>Player UIDs</div>
-                <span style={{ fontSize: 11, color: "#52525b" }}>max 4 UIDs</span>
+              <div className="flex justify-between items-center mb-2.5">
+                <div className="text-xs text-gray-600 dark:text-zinc-400 font-medium tracking-wide uppercase">Player UIDs</div>
+                <span className="text-[11px] text-gray-500 dark:text-zinc-600">max 4 UIDs</span>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 260, overflowY: "auto", paddingRight: 2 }}>
+              <div className="flex flex-col gap-2.5 max-h-[260px] overflow-y-auto pr-0.5">
                 {tempUids.map((uid, index) => (
-                  <div key={index} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, color: "#a78bfa", fontWeight: 700 }}>
+                  <div key={index} className="flex gap-2 items-center">
+                    <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-500/20 border border-purple-300 dark:border-purple-500/30 flex items-center justify-center flex-shrink-0 text-[11px] text-purple-700 dark:text-purple-400 font-bold">
                       {index + 1}
                     </div>
                     <input type="text" value={uid} onChange={(e) => updateTempUID(index, e.target.value)}
-                      placeholder={`UID ${index + 1}`} className="input-field"
+                      placeholder={`UID ${index + 1}`} 
+                      className="flex-1 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:border-purple-500/60 focus:ring-3 focus:ring-purple-500/20 outline-none transition-all"
                       autoFocus={index === tempUids.length - 1 && index > 0} />
                     {tempUids.length > 1 && (
-                      <button onClick={() => removeTempUID(index)} className="btn-secondary"
-                        style={{ flexShrink: 0, width: 36, height: 36, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}
+                      <button onClick={() => removeTempUID(index)} 
+                        className="bg-gray-100 dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-xl w-9 h-9 p-0 flex items-center justify-center text-sm cursor-pointer transition-all hover:bg-gray-200 dark:hover:bg-white/20 hover:border-gray-400 flex-shrink-0"
                         title="Remove">
-                        🗑
+                        <FiTrash2 className="text-gray-600 dark:text-gray-400" />
                       </button>
                     )}
                   </div>
@@ -750,25 +573,27 @@ export default function HomePage() {
 
               {tempUids.length < 4 && (
                 <button onClick={addTempUID}
-                  style={{ marginTop: 12, background: "none", border: "none", color: "#06b6d4", cursor: "pointer", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
-                  <span style={{ fontSize: 18, lineHeight: 1 }}>+</span> Add UID
+                  className="mt-3 bg-transparent border-none text-cyan-600 dark:text-cyan-400 cursor-pointer text-xs font-semibold flex items-center gap-1.5 p-0 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors">
+                  <FiPlus className="text-lg" /> Add UID
                 </button>
               )}
             </div>
 
-            <div className="divider" />
+            <div className="h-px bg-gray-200 dark:bg-white/10 my-5" />
 
             {/* Actions */}
-            <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={saveUids} className="btn-primary" style={{ flex: 1, padding: "13px 0", fontSize: 14, borderRadius: 12 }}>
-                Save Changes
+            <div className="flex gap-2.5">
+              <button onClick={saveUids} 
+                className="flex-1 py-3.5 text-sm rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 border-none text-white font-semibold cursor-pointer transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2">
+                <MdSave /> Save Changes
               </button>
-              <button onClick={closeUidPopup} className="btn-secondary" style={{ padding: "13px 20px", fontSize: 14 }}>
-                Cancel
+              <button onClick={closeUidPopup} 
+                className="py-3.5 px-5 text-sm rounded-xl bg-gray-100 dark:bg-white/10 border border-gray-300 dark:border-white/20 text-gray-700 dark:text-zinc-300 font-medium cursor-pointer transition-all hover:bg-gray-200 dark:hover:bg-white/20 flex items-center gap-2">
+                <MdCancel /> Cancel
               </button>
             </div>
 
-            <p style={{ marginTop: 12, fontSize: 11, color: "#3f3f46", textAlign: "center" }}>
+            <p className="mt-3 text-[11px] text-gray-500 dark:text-zinc-700 text-center">
               Changes apply to all emote sends in this session
             </p>
           </div>

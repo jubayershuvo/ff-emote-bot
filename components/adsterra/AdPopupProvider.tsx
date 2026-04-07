@@ -231,7 +231,7 @@ export function AdPopupProvider() {
 
           <button 
             onClick={closeNoReward}
-            className="mt-2 px-9 py-2.5 rounded-xl font-bold text-sm bg-black/10 dark:bg-white/10 border border-black/15 dark:border-white/15 hover:bg-black/20 dark:hover:bg-white/20 transition-all hover:scale-105 active:scale-95"
+            className="mt-2 px-9 py-2.5 rounded-xl font-bold text-sm text-black dark:text-white bg-black/10  dark:bg-white/10 border border-black/15 dark:border-white/15 hover:bg-black/20 dark:hover:bg-white/20 transition-all hover:scale-105 active:scale-95"
           >
             Close
           </button>
