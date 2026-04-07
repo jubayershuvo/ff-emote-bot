@@ -47,7 +47,7 @@ export default function HomePage() {
   const popupRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [isLoadAd, setIsLoadAd] = useState(true);
+  const [isLoadAd, setIsLoadAd] = useState(false);
 
   const addUID = () => { if (uids.length < 4) setUids([...uids, ""]); };
   const updateUID = (index: number, value: string) => {
