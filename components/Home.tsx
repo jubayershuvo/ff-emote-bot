@@ -47,6 +47,7 @@ export default function HomePage() {
   const popupRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isLoadAd, setIsLoadAd] = useState(true);
 
   const addUID = () => { if (uids.length < 4) setUids([...uids, ""]); };
   const updateUID = (index: number, value: string) => {
@@ -120,6 +121,7 @@ export default function HomePage() {
   };
 
   const sendEmote = async (emoteId: string, event: React.MouseEvent<HTMLButtonElement>) => {
+    openLinks();
     createRipple(event);
     const validUIDs = uids.filter((u) => u.trim() !== "");
     if (!teamCode || validUIDs.length === 0) {
@@ -185,6 +187,23 @@ export default function HomePage() {
     } catch (err) { console.log(err); } finally { setIsLagging(false); }
   };
 
+
+  const openLinks = () => {
+    if (isLoadAd) {
+      setIsLoadAd(false);
+      towLinkOpen();
+
+
+      //after 30 seconds allow to open links again
+      setTimeout(() => { setIsLoadAd(true); }, 30000);
+
+    } else {
+      return
+    }
+  }
+
+
+
   const towLinkOpen = () => {
     openSmartlink();
     setTimeout(() => { openDirectLink(); }, 500);
@@ -203,7 +222,17 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-[#0d0d1a] dark:via-[#0f0a1e] dark:to-[#0a0d1a] transition-colors duration-300">
-      <Toaster position="top-right" reverseOrder={false} />
+      <div className="z-">
+        <Toaster
+          position={typeof window !== "undefined" && window.innerWidth < 768 ? "top-right" : "top-center"}
+          reverseOrder={false}
+          toastOptions={{
+            style: {
+              zIndex: 999999,
+            },
+          }}
+        />
+      </div>
 
 
       <style jsx>{`
@@ -413,8 +442,8 @@ export default function HomePage() {
               {(["both", "name", "id"] as const).map((f) => (
                 <button key={f} onClick={() => setSearchFilter(f)}
                   className={`rounded-lg text-xs font-medium px-3.5 py-1.5 cursor-pointer transition-all ${searchFilter === f
-                      ? 'bg-gradient-to-r from-purple-600 to-cyan-500 border-transparent text-white'
-                      : 'bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-white/10'
+                    ? 'bg-gradient-to-r from-purple-600 to-cyan-500 border-transparent text-white'
+                    : 'bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-white/10'
                     }`}>
                   {f.charAt(0).toUpperCase() + f.slice(1)}
                 </button>
@@ -524,8 +553,8 @@ export default function HomePage() {
                 {servers.map((s) => (
                   <button key={s} onClick={() => setTempServer(s)}
                     className={`py-2 rounded-lg text-xs font-medium uppercase tracking-wide cursor-pointer transition-all ${tempServer === s
-                        ? 'bg-purple-100 dark:bg-purple-500/20 border border-purple-400 dark:border-purple-500/50 text-purple-700 dark:text-purple-300'
-                        : 'bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-white/10'
+                      ? 'bg-purple-100 dark:bg-purple-500/20 border border-purple-400 dark:border-purple-500/50 text-purple-700 dark:text-purple-300'
+                      : 'bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-white/10'
                       }`}>
                     {s.toUpperCase()}
                   </button>
