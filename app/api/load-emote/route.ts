@@ -15,13 +15,13 @@ export async function GET(request: Request) {
     );
   }
 
-  const isOtpValid = await verifyOTP(otp)
-  if (!isOtpValid) {
-    return NextResponse.json(
-      { error: "Invalid OTP" },
-      { status: 401 },
-    );
-  }
+  // const isOtpValid = await verifyOTP(otp)
+  // if (!isOtpValid) {
+  //   return NextResponse.json(
+  //     { error: "Invalid OTP" },
+  //     { status: 401 },
+  //   );
+  // }
 
 
 

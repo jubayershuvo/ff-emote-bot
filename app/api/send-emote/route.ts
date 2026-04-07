@@ -24,13 +24,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const isOtpValid = await verifyOTP(otp)
-  if (!isOtpValid) {
-    return NextResponse.json(
-      { error: "Invalid OTP" },
-      { status: 401 },
-    );
-  }
+  // const isOtpValid = await verifyOTP(otp)
+  // if (!isOtpValid) {
+  //   return NextResponse.json(
+  //     { error: "Invalid OTP" },
+  //     { status: 401 },
+  //   );
+  // }
 
   const { server, team_code, emote_id, uids, auto_leave } = body;
 
