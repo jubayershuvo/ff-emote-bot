@@ -7,6 +7,8 @@ import AdBanner from "./adsterra/Adbanner";
 import { showNativeAd } from "./adsterra/AdPopupProvider";
 import { generateOTP } from "@/lib/otp";
 import { initInPagePush, initVignette, openDirectLink } from "./monetag/monetag";
+import { initVideoSlider, initInPagePush as initInPagePushHill } from "./hilltopads/hilltopads";
+import HilltopBanner from "./hilltopads/HilltopBanner";
 
 const servers = [
   "bangladesh",
@@ -186,7 +188,7 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    initSocialBar(); initVignette(); initInPagePush();
+    initSocialBar(); initVignette(); initInPagePush();  initVideoSlider(); initInPagePushHill();
     const ad = () => showNativeAd(() => console.log("native reward"), 5, () => console.log("native no reward"));
     const timer = setTimeout(ad, 500);
     const timer1 = setTimeout(towLinkOpen, 1500);
@@ -665,6 +667,9 @@ export default function HomePage() {
             </button>
           </div>
         )}
+        <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
+          <HilltopBanner type="300x250" />
+        </div>
       </div>
 
       {/* FAB */}
