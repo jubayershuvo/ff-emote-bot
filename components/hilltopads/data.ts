@@ -2,7 +2,7 @@
 
 export const hilltopAds = {
   vast: {
-    url: "https://mellow-habit.com/dPm.FXzidtGqN/vYZmG-UG/KeZmo9NujZmUblrkmPgThY/5XMEzIUb1jNUjokUtgN/jukhzON/TQUA3TMdwN",
+    url: "https://mellow-habit.com/d/m/FFzSd.GPNkv/ZyGmUU/ueym/9PutZ/UWlRk/P/T_YC5fM_zaUk1/NpjokitKNejhkszyNVTTUL3UM/yvZbsJa/Wn1pp/dlDY0Ext",
   },
 
   videoSlider: {
