@@ -462,7 +462,7 @@ export default function HomePage() {
               <div key={index} className="bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-4 text-center transition-all hover:border-purple-500/50 dark:hover:border-purple-500/50 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(124,58,237,0.15)] fade-up"
                 style={{ animationDelay: `${Math.min(index * 0.03, 0.4)}s` }}>
                 <div className="relative inline-block">
-                  <img src={`https://res.cloudinary.com/deqdh0r60/image/upload/w_72,h_72,c_fit,q_auto:low,f_auto/emotes/${emote.id}.png`} alt={emote.name}
+                  <img src={`https://cdn.jsdelivr.net/gh/ShahGCreator/icon@main/PNG/${emote.image}`} alt={emote.name}
                     className={`w-[72px] h-[72px] object-contain mb-2.5 transition-transform duration-200 hover:scale-110 hover:-rotate-3 ${loadingEmote === emote.id ? 'brightness-50' : ''}`} />
                   {loadingEmote === emote.id && (
                     <div className="absolute inset-0 flex items-center justify-center">
