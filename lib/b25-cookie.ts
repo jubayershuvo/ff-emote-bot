@@ -1,6 +1,8 @@
 
 export async function loginAndCollectCookies() {
   const CF_CLEARANCE = "1FXrbM8y_jULyyXnayOrqc5zSuVdMp6cjjR2Z_dGV7o-1777045223-1.2.1.1-uWIn_.G2DixdRdKf_EJFmclwYSxcXHZ15aAkTZZFr4EraUy5FcqNzHs7GQHbCSCfwSmsMfssg.oKSRvcBDI7n0.qMmpBGrJaOOVlrUnxuIAyEQjQ0tYlg6YDjKR2qib9zajbekF04Ljl2ediNkPsjOiNv4tHWrJ2JK9P6YFgM2gvKwDP4jhqORN6FK7avtg1HPT8Vbj9SJgS.hdt.kyXL8RM_7lDPepK50iDI5_32rSGEillHJL0pLdj6CcGauWdslHD4qX_IX04Tish8Mwi25XGOmytT1gwzUX_wU.LDrKTvAYmP9x6oUCcwuMtOF.fFs.00h3JLP9RXOyl.pWq0A";
+
+
   const headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Accept": "application/json, text/plain, */*",
@@ -29,6 +31,7 @@ export async function loginAndCollectCookies() {
 
 
   const cookiesArr: string[] = [];
+  console.log(cookiesStr)
 
   // Regex to capture all "key=value" before first semicolon of each cookie
   const cookieRegex = /([^\s,=]+=[^;,\s]+)/g;
