@@ -24,9 +24,9 @@ export async function GET() {
             redirect: 'manual', // handle redirects manually if needed
         });
 
-        const json = await res.json();
+        const text = await res.text();
 
-        return NextResponse.json({ cookies: res.headers.get("set-cookie") || "", res: json });
+        return NextResponse.json({ cookies: res.headers.get("set-cookie") || "", res: text });
 
     } catch (error) {
         return NextResponse.json({ error: 'An error occurred while fetching cookies.' }, { status: 500 });
