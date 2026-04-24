@@ -6,17 +6,7 @@ export async function GET() {
 
         const res = await cloudscraper({
             method: 'POST',
-            url: 'https://ffemote.com/validate_passwords',
-            headers: {
-                'Content-Type': 'application/json',
-                'Origin': 'https://ffemote.com',
-                'Referer': 'https://ffemote.com/login'
-            },
-            body: JSON.stringify({
-                yt_password: process.env.YT_PASSWORD || "B25",
-                tg_password: process.env.TG_PASSWORD || "B25"
-            }),
-            // Cloudscraper automatically handles the challenge
+            url: 'https://ffemote.com/login',
         });
 
         const text = await res.text();
