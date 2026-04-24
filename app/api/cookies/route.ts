@@ -14,14 +14,9 @@ export async function GET() {
             "Sec-Fetch-Site": "same-origin",
         };
 
-        const res = await fetch('https://ffemote.com/validate_passwords', {
-            method: "POST",
+        const res = await fetch('https://ffemote.com/login', {
+            method: "GET",
             headers: headers,
-            body: JSON.stringify({
-                yt_password: process.env.YT_PASSWORD || "B25",
-                tg_password: process.env.TG_PASSWORD || "B25",
-            }),
-            redirect: 'manual', // handle redirects manually if needed
         });
 
         const text = await res.text();
