@@ -7,13 +7,13 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const offset = Number(url.searchParams.get("offset"));
   const limit = Number(url.searchParams.get("limit"));
-  const otp = request.headers.get("x-otp");
-  if (!otp) {
-    return NextResponse.json(
-      { error: "Missing OTP header" },
-      { status: 401 },
-    );
-  }
+  // const otp = request.headers.get("x-otp");
+  // if (!otp) {
+  //   return NextResponse.json(
+  //     { error: "Missing OTP header" },
+  //     { status: 401 },
+  //   );
+  // }
 
   // const isOtpValid = await verifyOTP(otp)
   // if (!isOtpValid) {
