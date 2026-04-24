@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "cloudscraper": "^4.6.0",
     "fluid-player": "^3.58.0",
     "next": "16.1.6",
     "otplib": "^13.4.0",
