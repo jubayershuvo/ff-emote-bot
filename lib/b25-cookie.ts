@@ -15,6 +15,7 @@ export async function loginAndCollectCookies() {
   const cookies = res.headers.get("set-cookie") || "";
   const cookiesStr: string = cookies ?? "";
 
+
   const cookiesArr: string[] = [];
 
   // Regex to capture all "key=value" before first semicolon of each cookie

@@ -156,8 +156,8 @@ export default function HomePage() {
       const otp = await generateOTP();
       const res = await fetch(`/api/load-emote?offset=${emotes.length}&limit=1000`, { method: "GET", headers: { "Content-Type": "application/json", "x-otp": otp } });
       const data = await res.json();
-      setEmotes(data.emotes);
-      setFilteredEmotes(data.emotes);
+      setEmotes(data.emotes || []);
+      setFilteredEmotes(data.emotes || []);
     } catch { toast.error("Failed to load emotes"); }
   };
 
@@ -448,7 +448,7 @@ export default function HomePage() {
               ))}
               {searchTerm && (
                 <span className="text-xs text-gray-600 dark:text-zinc-500 flex items-center ml-auto">
-                  <span className="text-purple-600 dark:text-purple-400 font-semibold">{filteredEmotes.length}</span>&nbsp;result{filteredEmotes.length !== 1 ? "s" : ""}
+                  <span className="text-purple-600 dark:text-purple-400 font-semibold">{filteredEmotes?.length}</span>&nbsp;result{filteredEmotes?.length !== 1 ? "s" : ""}
                 </span>
               )}
             </div>
@@ -456,9 +456,9 @@ export default function HomePage() {
         </div>
 
         {/* EMOTE GRID */}
-        {filteredEmotes.length > 0 ? (
+        {filteredEmotes?.length > 0 ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3.5">
-            {filteredEmotes.map((emote, index) => (
+            {filteredEmotes?.map((emote, index) => (
               <div key={index} className="bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-4 text-center transition-all hover:border-purple-500/50 dark:hover:border-purple-500/50 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(124,58,237,0.15)] fade-up"
                 style={{ animationDelay: `${Math.min(index * 0.03, 0.4)}s` }}>
                 <div className="relative inline-block">
@@ -490,7 +490,7 @@ export default function HomePage() {
         )}
 
         {/* LOAD MORE */}
-        {emotes.length > 0 && filteredEmotes.length > 0 && (
+        {emotes?.length > 0 && filteredEmotes?.length > 0 && (
           <div className="flex justify-center mt-8">
             <button onClick={loadMoreEmotes} disabled={loadingMore}
               className="relative overflow-hidden px-8 py-3.5 text-sm rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 border-none text-white font-semibold cursor-pointer transition-all hover:opacity-90 hover:-translate-y-0.5 active:scale-95 disabled:opacity-45 disabled:cursor-not-allowed min-w-[180px]">
