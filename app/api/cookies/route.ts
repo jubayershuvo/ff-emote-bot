@@ -21,6 +21,6 @@ export async function GET() {
         return NextResponse.json({ cookies });
 
     } catch (error) {
-        return NextResponse.json({ error: 'An error occurred while fetching cookies.' }, { status: 500 });
+        return NextResponse.json({ error }, { status: 500 });
     }
 }
