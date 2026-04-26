@@ -9,10 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "cloudscraper": "^4.6.0",
     "fluid-player": "^3.58.0",
     "next": "16.1.6",
     "otplib": "^13.4.0",
+    "puppeteer": "^24.42.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hot-toast": "^2.6.0",

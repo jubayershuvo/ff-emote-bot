@@ -1,17 +1,24 @@
-import cloudscraper from "cloudscraper";
+
+import puppeteer from "puppeteer";
 import { NextResponse } from "next/server";
 
 export async function GET() {
     try {
 
-        const res = await cloudscraper({
-            method: 'POST',
-            url: 'https://ffemote.com/login',
-        });
 
-        const text = await res.text();
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
 
-        return NextResponse.json({ cookies: res.headers.get("set-cookie") || "", res: text });
+        await page.goto("https://ffemote.com/login");
+
+        // get cookies
+        const cookies = await page.cookies();
+        console.log(cookies);
+
+        await browser.close();
+
+
+        return NextResponse.json({ cookies });
 
     } catch (error) {
         return NextResponse.json({ error: 'An error occurred while fetching cookies.' }, { status: 500 });
