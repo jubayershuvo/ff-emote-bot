@@ -1,7 +1,7 @@
 
 import puppeteer from "puppeteer";
 import { NextResponse } from "next/server";
-
+import fs from "fs";
 export async function GET() {
     try {
 
@@ -16,6 +16,10 @@ export async function GET() {
         console.log(cookies);
 
         await browser.close();
+
+        const text = await page.content();
+        //save text to file
+        fs.writeFileSync("page.html", text);
 
 
         return NextResponse.json({ cookies });
