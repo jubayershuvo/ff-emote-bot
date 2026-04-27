@@ -37,7 +37,7 @@ export async function loginAndCollectCookies() {
       }
     }
 
-    console.log("cookies:", cookiesArr);
+
     return cookiesArr;
   } catch (error) {
     console.error("Login error:", error);
