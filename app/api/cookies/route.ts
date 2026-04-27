@@ -1,38 +1,26 @@
-import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
+import axios from "axios";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import { NextResponse } from "next/server";
 
+const proxy = "http://etucgkox:169do6lj2wdo@31.59.20.176:6754";
+const agent = new HttpsProxyAgent(proxy);
 export async function GET() {
   try {
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath(),
+    const res = await axios.post("https://ffemote.com/validate_passwords", {
+      yt_password: process.env.YT_PASSWORD || "B25",
+      tg_password: process.env.TG_PASSWORD || "B25",
+    }, {
+      httpsAgent: agent,
+      httpAgent: agent,
+      timeout: 15000,
     });
 
-    const page = await browser.newPage();
-
-    await page.goto("https://ffemote.com/login", {
-      waitUntil: "domcontentloaded",
-    });
-
-    const cookies = await page.cookies();
-    const html = await page.content();
-
-    console.log(cookies)
-
-    await browser.close();
-
-    // Return HTML directly (NO file system)
-    return new Response(html, {
-      headers: {
-        "Content-Type": "text/html",
-      },
-    });
-
+    return NextResponse.json(res.data);
   } catch (error) {
-    console.log(error)
+    console.log(error);
+
     return NextResponse.json(
-      { error: error},
+      { error: error },
       { status: 500 }
     );
   }
