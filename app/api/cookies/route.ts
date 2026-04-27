@@ -1,18 +1,12 @@
-import axios from "axios";
-import { HttpsProxyAgent } from "https-proxy-agent";
+
+import proxyClient from "@/lib/proxy";
 import { NextResponse } from "next/server";
 
-const proxy = "http://etucgkox:169do6lj2wdo@31.59.20.176:6754";
-const agent = new HttpsProxyAgent(proxy);
 export async function GET() {
   try {
-    const res = await axios.post("https://ffemote.com/validate_passwords", {
+    const res = await proxyClient.post("https://ffemote.com/validate_passwords", {
       yt_password: process.env.YT_PASSWORD || "B25",
       tg_password: process.env.TG_PASSWORD || "B25",
-    }, {
-      httpsAgent: agent,
-      httpAgent: agent,
-      timeout: 15000,
     });
 
     return NextResponse.json(res.data);

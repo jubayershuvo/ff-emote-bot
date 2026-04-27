@@ -1,25 +1,19 @@
-import axios from "axios";
-import { HttpsProxyAgent } from "https-proxy-agent";
+import proxyClient from "./proxy";
 
-const proxy = "http://etucgkox:169do6lj2wdo@31.59.20.176:6754";
-const agent = new HttpsProxyAgent(proxy);
 
 export async function loginAndCollectCookies() {
   try {
-    const res = await axios.post(
+    const res = await proxyClient.post(
       "https://ffemote.com/validate_passwords",
       {
         yt_password: process.env.YT_PASSWORD || "B25",
         tg_password: process.env.TG_PASSWORD || "B25",
       },
       {
-        httpsAgent: agent,
-        httpAgent: agent,
         headers: {
           "Content-Type": "application/json",
           "User-Agent": "Mozilla/5.0",
         },
-        timeout: 15000,
       }
     );
 

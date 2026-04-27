@@ -1,8 +1,4 @@
-import axios from "axios";
-import { HttpsProxyAgent } from "https-proxy-agent";
-
-const proxy = "http://etucgkox:169do6lj2wdo@31.59.20.176:6754";
-const agent = new HttpsProxyAgent(proxy);
+import proxyClient from "./proxy";
 
 interface SendEmoteParams {
   server: string;
@@ -19,7 +15,7 @@ export async function sendEmote(params: SendEmoteParams) {
   const cookieHeader = cookies.join("; ");
 
   try {
-    const response = await axios.post(
+    const response = await proxyClient.post(
       "https://ffemote.com/send_emote",
       {
         server,
@@ -35,10 +31,7 @@ export async function sendEmote(params: SendEmoteParams) {
           Origin: "https://ffemote.com",
           Referer: "https://ffemote.com/",
           "User-Agent": "Mozilla/5.0",
-        },
-        httpsAgent: agent,
-        httpAgent: agent,
-        timeout: 15000,
+        }
       }
     );
 
